@@ -8,12 +8,12 @@
     body, html {
       margin: 0;
       padding: 0;
+      font-family: sans-serif;
       width: 100%;
       height: 100%;
-      font-family: sans-serif;
     }
     .container {
-      max-width: 800px;
+      max-width: 1000px;
       margin: 0 auto;
       padding: 20px;
       text-align: center;
@@ -23,8 +23,24 @@
       font-size: 16px;
       margin: 5px;
     }
-    iframe {
+    /* Grid container for the iframes */
+    .streams-grid {
+      display: grid;
+      gap: 10px;
       margin-top: 20px;
+    }
+    /* Maintains a 16:9 aspect ratio for each iframe */
+    .iframe-wrapper {
+      position: relative;
+      width: 100%;
+      padding-top: 56.25%; /* 16:9 ratio */
+    }
+    .iframe-wrapper iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
       border: none;
     }
   </style>
@@ -32,22 +48,53 @@
 <body>
   <div class="container">
     <h1>Dynamic Stream Embed</h1>
-    <p>Enter a stream number to update the embed:</p>
-    <input type="text" id="streamInput" placeholder="e.g. 39">
-    <button id="updateStream">Update Stream</button>
-    <div>
-      <iframe id="streamIframe" src="about:blank" width="640" height="360" allowfullscreen></iframe>
+    <p>Enter up to 6 stream numbers. Leave blank for streams you don't need.</p>
+    <div class="inputs">
+      <input type="text" id="streamInput1" placeholder="e.g. 39">
+      <input type="text" id="streamInput2" placeholder="e.g. 44">
+      <input type="text" id="streamInput3" placeholder="e.g. 45">
+      <input type="text" id="streamInput4" placeholder="e.g. 50">
+      <input type="text" id="streamInput5" placeholder="e.g. 60">
+      <input type="text" id="streamInput6" placeholder="e.g. 70">
     </div>
+    <button id="updateStreams">Update Streams</button>
+    <div id="streamsContainer" class="streams-grid"></div>
   </div>
   <script>
-    document.getElementById('updateStream').addEventListener('click', function(){
-      var streamNum = document.getElementById('streamInput').value.trim();
-      if(streamNum){
-        var streamURL = 'https://thedaddy.to/embed/stream-' + streamNum + '.php';
-        document.getElementById('streamIframe').src = streamURL;
-      } else {
-        alert("Please enter a stream number.");
+    document.getElementById('updateStreams').addEventListener('click', function() {
+      // Collect up to 6 input values, ignoring empty ones.
+      let streamNumbers = [];
+      for (let i = 1; i <= 6; i++) {
+        let val = document.getElementById('streamInput' + i).value.trim();
+        if (val !== "") {
+          streamNumbers.push(val);
+        }
       }
+      
+      // Get the container for the iframes and clear any previous content.
+      let container = document.getElementById('streamsContainer');
+      container.innerHTML = "";
+      
+      let count = streamNumbers.length;
+      if (count === 0) {
+        alert("Please enter at least one stream number.");
+        return;
+      }
+      
+      // Calculate grid columns: using square-like layout.
+      let columns = Math.ceil(Math.sqrt(count));
+      container.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
+      
+      // Create and append an iframe for each stream number.
+      streamNumbers.forEach(streamNum => {
+        let wrapper = document.createElement('div');
+        wrapper.className = "iframe-wrapper";
+        let iframe = document.createElement('iframe');
+        iframe.src = `https://thedaddy.to/embed/stream-${streamNum}.php`;
+        iframe.allowFullscreen = true;
+        wrapper.appendChild(iframe);
+        container.appendChild(wrapper);
+      });
     });
   </script>
 </body>
