@@ -184,28 +184,26 @@
         return;
       }
 
-      streamNumbers.forEach(streamNum => {
-        let wrapper = document.createElement('div');
-        wrapper.className = "iframe-wrapper";
-        let iframe = document.createElement('iframe');
-        iframe.src = https://daddylive.mp/embed/stream-${streamNum}.php;
-        iframe.allowFullscreen = true;
-        wrapper.appendChild(iframe);
-        container.appendChild(wrapper);
-      });
-    });
+streamNumbers.forEach(streamNum => {
+  let wrapper = document.createElement('div');
+  wrapper.className = "iframe-wrapper";
+  let iframe = document.createElement('iframe');
+  iframe.src = `https://daddylive.mp/embed/stream-${streamNum}.php`;
+  iframe.allowFullscreen = true;
+  wrapper.appendChild(iframe);
+  container.appendChild(wrapper);
+});
 
     // Pomodoro Timer Logic
     let timer;
     let timeLeft = 25 * 60; // Default 25 min
     let isRunning = false;
 
-    function updateTimerDisplay() {
-      let minutes = Math.floor(timeLeft / 60);
-      let seconds = timeLeft % 60;
-      document.getElementById("timerDisplay").textContent = 
-        ${minutes}:${seconds < 10 ? "0" : ""}${seconds};
-    }
+function updateTimerDisplay() {
+  let minutes = Math.floor(timeLeft / 60);
+  let seconds = timeLeft % 60;
+  document.getElementById("timerDisplay").textContent = `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+}
 
     document.getElementById("startPomodoro").addEventListener("click", function () {
       if (!isRunning) {
