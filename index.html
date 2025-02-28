@@ -112,19 +112,6 @@
       height: 100%;
       border: none;
     }
-
-    /* Pomodoro Timer */
-    .pomodoro {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .pomodoro span {
-      font-size: 18px;
-      font-weight: bold;
-    }
-
   </style>
 </head>
 <body class="dark-mode">
@@ -142,13 +129,6 @@
     <input type="text" id="streamInput5" placeholder="e.g. 60">
     <input type="text" id="streamInput6" placeholder="e.g. 70">
     <button id="updateStreams">Update Streams</button>
-
-    <!-- Pomodoro Timer -->
-    <div class="pomodoro">
-      <span id="timerDisplay">25:00</span>
-      <button id="startPomodoro">▶️ Start</button>
-      <button id="resetPomodoro">🔄 Reset</button>
-    </div>
   </div>
 
   <!-- Streams Container -->
@@ -184,58 +164,16 @@
         return;
       }
 
-streamNumbers.forEach(streamNum => {
-  let wrapper = document.createElement('div');
-  wrapper.className = "iframe-wrapper";
-  let iframe = document.createElement('iframe');
-  iframe.src = `https://daddylive.mp/embed/stream-${streamNum}.php`;
-  iframe.allowFullscreen = true;
-  wrapper.appendChild(iframe);
-  container.appendChild(wrapper);
-});
-
-    // Pomodoro Timer Logic
-    let timer;
-    let timeLeft = 25 * 60; // Default 25 min
-    let isRunning = false;
-
-function updateTimerDisplay() {
-  let minutes = Math.floor(timeLeft / 60);
-  let seconds = timeLeft % 60;
-  document.getElementById("timerDisplay").textContent = `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
-}
-
-    document.getElementById("startPomodoro").addEventListener("click", function () {
-      if (!isRunning) {
-        isRunning = true;
-        this.textContent = "⏸ Pause";
-
-        timer = setInterval(() => {
-          if (timeLeft > 0) {
-            timeLeft--;
-            updateTimerDisplay();
-          } else {
-            clearInterval(timer);
-            isRunning = false;
-            alert("Time's up! Take a break.");
-          }
-        }, 1000);
-      } else {
-        clearInterval(timer);
-        isRunning = false;
-        this.textContent = "▶️ Start";
-      }
+      streamNumbers.forEach(streamNum => {
+        let wrapper = document.createElement('div');
+        wrapper.className = "iframe-wrapper";
+        let iframe = document.createElement('iframe');
+        iframe.src = `https://daddylive.mp/embed/stream-${streamNum}.php`;
+        iframe.allowFullscreen = true;
+        wrapper.appendChild(iframe);
+        container.appendChild(wrapper);
+      });
     });
-
-    document.getElementById("resetPomodoro").addEventListener("click", function () {
-      clearInterval(timer);
-      isRunning = false;
-      timeLeft = 25 * 60;
-      updateTimerDisplay();
-      document.getElementById("startPomodoro").textContent = "▶️ Start";
-    });
-
-    updateTimerDisplay(); // Initialize display
   </script>
 
 </body>
