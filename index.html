@@ -80,16 +80,37 @@
       background: #3a3a3a;
     }
 
-    .category-events {
-      overflow: hidden;
-      transition: max-height 0.3s ease-out;
-      max-height: 1000px;
-    }
+.category-events {
+  overflow-y: hidden;
+  transition: max-height 0.3s ease-out;
+  max-height: 0;
+}
+
+.category-events:not(.collapsed) {
+  max-height: 80vh; /* Limits height to 80% of viewport */
+  overflow-y: auto;
+  padding-right: 5px; /* Space for scrollbar */
+}
 
     .category-events.collapsed {
       max-height: 0;
     }
+.category-events::-webkit-scrollbar {
+  width: 8px;
+}
 
+.category-events::-webkit-scrollbar-track {
+  background: #333;
+}
+
+.category-events::-webkit-scrollbar-thumb {
+  background: #666;
+  border-radius: 4px;
+}
+
+.category-events::-webkit-scrollbar-thumb:hover {
+  background: #888;
+}
     .event {
       margin-bottom: 10px;
       padding: 10px;
@@ -248,6 +269,9 @@
           
           categoryHeader.addEventListener("click", () => {
             eventsContainer.classList.toggle("collapsed");
+              if (!eventsContainer.classList.contains("collapsed")) {
+    categoryHeader.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
             categoryHeader.querySelector("span:last-child").textContent = 
               eventsContainer.classList.contains("collapsed") ? "▶" : "▼";
           });
