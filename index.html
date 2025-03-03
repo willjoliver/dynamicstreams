@@ -1,796 +1,758 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Dynamic Stream Embed</title>
-  <style>
-  * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    
-    body, html {
-      width: 100%;
-      height: 100%;
-      font-family: sans-serif;
-      background: #121212;
-      color: white;
-      display: flex;
-    }
-
-    .top-controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 20px;
-    }
-.channel-sidebar {
-      width: 250px;
-      height: 100vh;
-      background: #222;
-      color: white;
-      overflow-y: auto;
-      padding: 15px;
-      position: fixed;
-      right: -250px;
-      transition: right 0.3s;
-    }
-
-    .channel-sidebar.open {
-      right: 0;
-    }
-
-    .channel-sidebar h2 {
-      font-size: 18px;
-      text-align: center;
-      margin-bottom: 15px;
-    }
-
-    .channel-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .channel-item {
-      padding: 10px;
-      background: #333;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    .channel-item:hover {
-      background: #444;
-    }
-
-    .sidebar {
-      width: 300px;
-      height: 100vh;
-      background: #222;
-      color: white;
-      overflow-y: auto;
-      padding: 15px;
-      position: fixed;
-      left: -300px;
-      transition: left 0.3s;
-    }
-
-    .sidebar.open {
-      left: 0;
-    }
-
-    .sidebar h2 {
-      font-size: 18px;
-      text-align: center;
-      margin-bottom: 10px;
-      position: relative;
-    }
-
-    .close-sidebar {
-      position: absolute;
-      right: 15px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: none;
-      border: none;
-      color: white;
-      font-size: 20px;
-      cursor: pointer;
-      padding: 5px;
-    }
-
-    .category-header {
-      cursor: pointer;
-      padding: 10px;
-      background: #333;
-      border-radius: 5px;
-      margin: 10px 0;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .category-header:hover {
-      background: #3a3a3a;
-    }
-
-.category-events {
-  overflow-y: hidden;
-  transition: max-height 0.3s ease-out;
-  max-height: 0;
-}
-
-.category-events:not(.collapsed) {
-  max-height: 80vh; /* Limits height to 80% of viewport */
-  overflow-y: auto;
-  padding-right: 5px; /* Space for scrollbar */
-}
-
-    .category-events.collapsed {
-      max-height: 0;
-    }
-.category-events::-webkit-scrollbar {
-  width: 8px;
-}
-
-.category-events::-webkit-scrollbar-track {
-  background: #333;
-}
-
-.category-events::-webkit-scrollbar-thumb {
-  background: #666;
-  border-radius: 4px;
-}
-
-.category-events::-webkit-scrollbar-thumb:hover {
-  background: #888;
-}
-    .event {
-      margin-bottom: 10px;
-      padding: 10px;
-      background: #333;
-      border-radius: 5px;
-    }
-
-    .channel {
-      cursor: pointer;
-      padding: 5px;
-      background: #444;
-      border-radius: 3px;
-      margin-top: 5px;
-      text-align: center;
-    }
-
-    .channel:hover {
-      background: #555;
-    }
-
-    button {
-      padding: 10px 15px;
-      font-size: 16px;
-      background-color: #333;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      height: 40px;
-    }
-
-    button:hover {
-      background-color: #555;
-    }
-
-    input {
-      padding: 10px;
-      font-size: 16px;
-      background-color: #333;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      height: 40px;
-      flex: 1;
-      min-width: 150px;
-    }
-
-    .main-content {
-      margin: 0 0;
-      width: 100%;
-      padding: 20px;
-      transition: margin 0.3s;
-    }
-
-.sidebar.open ~ .main-content {
-  margin-left: 300px;
-}
-    .channel-sidebar.open ~ .main-content {
-      margin-right: 250px;
-    }
-.streams-grid {
-  display: grid;
-  margin-top: 20px;
-  /* Default layout for 3-4 streams */
-  grid-template-columns: repeat(2, 1fr);
-}
-
-
-    .iframe-wrapper {
-      position: relative;
-      width: 100%;
-      padding-top: 56.25%;
-      background: #000;
-      border-radius: 8px;
-      overflow: hidden;
-    }
-    
-    .iframe-wrapper iframe {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      border: none;
-    }
-
-@media (min-width: 769px) {
-  /* Single stream - full width */
-  .streams-grid[data-stream-count="1"] {
-    grid-template-columns: 1fr;
-  }
-  
-  /* Two streams - 2 columns */
-  .streams-grid[data-stream-count="2"] {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  
-  /* 5-6 streams - 3 columns */
-  .streams-grid[data-stream-count="5"],
-  .streams-grid[data-stream-count="6"] {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-
-    @media (max-width: 768px) {
-      .streams-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
-</head>
-<body>
-  <!-- Your HTML structure -->
-  <div id="sidebar" class="sidebar">
-    <h2>📅 Event Schedule
-      <button class="close-sidebar" onclick="toggleSidebar()">×</button>
-    </h2>
-    <div id="scheduleContainer">Loading...</div>
-  </div>
-
-  <div id="channelSidebar" class="channel-sidebar">
-    <h2>📺 Channel List</h2>
-    <div class="channel-list" id="channelList"></div>
-  </div>
-
-  <div class="main-content">
-    <div class="top-controls">
-      <button class="sidebar-toggle" onclick="toggleSidebar()">📅 Show Schedule</button>
-<input type="text" id="streamInput1" placeholder="Stream 1">
-      <input type="text" id="streamInput2" placeholder="Stream 2">
-      <input type="text" id="streamInput3" placeholder="Stream 3">
-      <input type="text" id="streamInput4" placeholder="Stream 4">
-      <input type="text" id="streamInput5" placeholder="Stream 5">
-      <input type="text" id="streamInput6" placeholder="Stream 6">
-      <button id="updateStreams">Update Streams</button>
-      <button id="clearStreams">Clear Streams</button>
-      <button class="channel-toggle" onclick="toggleChannelSidebar()">📺 Channels</button>
-    </div>
-    <div id="streamsContainer" class="streams-grid"></div>
-  </div>
-
-  <!-- Insert channel data directly -->
-  <script>
-    // Fixed version of channels data (with commas between objects)
-    const channels = [
-{id: 360, name: "5 USA"},
-{id: 269, name: "A Sport PK"},
-{id: 302, name: "A&E USA"},
-{id: 51, name: "ABC USA"},
-{id: 766, name: "ABCNY USA"},
-{id: 609, name: "Abu Dhabi Sports 1 Premium"},
-{id: 600, name: "Abu Dhabi Sports 1 UAE"},
-{id: 610, name: "Abu Dhabi Sports 2 Premium"},
-{id: 601, name: "Abu Dhabi Sports 2 UAE"},
-{id: 664, name: "ACC Network USA"},
-{id: 295, name: "Adult Swim"},
-{id: 923, name: "Altitude Sports"},
-{id: 303, name: "AMC USA"},
-{id: 304, name: "Animal Planet"},
-{id: 370, name: "Astro Cricket"},
-{id: 123, name: "Astro SuperSport 1"},
-{id: 124, name: "Astro SuperSport 2"},
-{id: 125, name: "Astro SuperSport 3"},
-{id: 126, name: "Astro SuperSport 4"},
-{id: 742, name: "AXS TV USA"},
-{id: 891, name: "FanDuel Sports Detroit"},
-{id: 892, name: "FanDuel Sports Florida"},
-{id: 893, name: "FanDuel Sports Great Lakes"},
-{id: 894, name: "FanDuel Sports Indiana"},
-{id: 895, name: "FanDuel Sports Kansas City"},
-{id: 896, name: "FanDuel Sports Midwest"},
-{id: 898, name: "FanDuel Sports North"},
-{id: 899, name: "FanDuel Sports Ohio"},
-{id: 900, name: "FanDuel Sports Oklahoma"},
-{id: 901, name: "FanDuel Sports San Diego"},
-{id: 902, name: "FanDuel Sports SoCal"},
-{id: 903, name: "FanDuel Sports South"},
-{id: 904, name: "FanDuel Sports Southeast"},
-{id: 905, name: "FanDuel Sports Sun"},
-{id: 906, name: "FanDuel Sports West"},
-{id: 907, name: "FanDuel Sports Wisconsin"},
-{id: 727, name: "BBC 1 DE"},
-{id: 305, name: "BBC America (BBCA)"},
-{id: 359, name: "BBC Four UK"},
-{id: 349, name: "BBC News Channel HD"},
-{id: 356, name: "BBC One UK"},
-{id: 358, name: "BBC Three UK"},
-{id: 357, name: "BBC Two UK"},
-{id: 306, name: "BET USA"},
-{id: 397, name: "BIG TEN Network (BTN USA)"},
-{id: 648, name: "Boomerang"},
-{id: 307, name: "Bravo USA"},
-{id: 750, name: "C SPAN 1"},
-{id: 339, name: "Cartoon Network"},
-{id: 832, name: "CBC CA"},
-{id: 910, name: "CBS Sports Golazo"},
-{id: 308, name: "CBS Sports Network (CBSSN)"},
-{id: 52, name: "CBS USA"},
-{id: 767, name: "CBSNY USA"},
-{id: 354, name: "Channel 4 UK"},
-{id: 355, name: "Channel 5 UK"},
-{id: 374, name: "Cinemax USA"},
-{id: 831, name: "Citytv"},
-{id: 647, name: "CMT USA"},
-{id: 309, name: "CNBC USA"},
-{id: 345, name: "CNN USA"},
-{id: 310, name: "Comedy Central"},
-{id: 696, name: "Comet USA"},
-{id: 697, name: "Cooking Channel USA"},
-{id: 748, name: "COZI TV USA"},
-{id: 838, name: "CTV 2 Canada"},
-{id: 602, name: "CTV Canada"},
-{id: 280, name: "CW PIX 11 USA"},
-{id: 300, name: "CW USA"},
-{id: 313, name: "Discovery Channel"},
-{id: 285, name: "MotorTrend CA"},
-{id: 312, name: "Disney Channel"},
-{id: 315, name: "E! Entertainment Television"},
-{id: 363, name: "E4 Channel"},
-{id: 379, name: "ESPN 1 NL"},
-{id: 386, name: "ESPN 2 NL"},
-{id: 81, name: "ESPN Brasil"},
-{id: 375, name: "ESPN Deportes"},
-{id: 798, name: "ESPN Extra Argentina"},
-{id: 387, name: "ESPN Premium Argentina"},
-{id: 149, name: "ESPN SUR"},
-{id: 44, name: "ESPN USA"},
-{id: 82, name: "ESPN2 Brasil"},
-{id: 150, name: "ESPN2 SUR"},
-{id: 45, name: "ESPN2 USA"},
-{id: 83, name: "ESPN3 Brasil"},
-{id: 85, name: "ESPN4 Brasil"},
-{id: 288, name: "ESPNews"},
-{id: 316, name: "ESPNU USA"},
-{id: 41, name: "EuroSport 1 UK"},
-{id: 42, name: "EuroSport 2 UK"},
-{id: 369, name: "Fox Cricket"},
-{id: 643, name: "FOX Deportes USA"},
-{id: 756, name: "FOX Soccer Plus"},
-{id: 39, name: "Fox Sports 1 USA"},
-{id: 758, name: "Fox Sports 2 USA"},
-{id: 820, name: "FOX Sports 502 AU"},
-{id: 821, name: "FOX Sports 503 AU"},
-{id: 822, name: "FOX Sports 504 AU"},
-{id: 823, name: "FOX Sports 505 AU"},
-{id: 824, name: "FOX Sports 506 AU"},
-{id: 825, name: "FOX Sports 507 AU"},
-{id: 54, name: "FOX USA"},
-{id: 768, name: "FOXNY USA"},
-{id: 301, name: "Freeform"},
-{id: 279, name: "FUSE TV USA"},
-{id: 381, name: "FX Movie Channel"},
-{id: 317, name: "FX USA"},
-{id: 298, name: "FXX USA"},
-{id: 319, name: "Game Show Network"},
-{id: 836, name: "Global CA"},
-{id: 318, name: "GOLF Channel USA"},
-{id: 752, name: "Grit Channel"},
-{id: 690, name: "HBO Comedy USA"},
-{id: 691, name: "HBO Family USA"},
-{id: 693, name: "HBO Signature USA"},
-{id: 321, name: "HBO USA"},
-{id: 694, name: "HBO Zone USA"},
-{id: 689, name: "HBO2 USA"},
-{id: 323, name: "Headline News"},
-{id: 322, name: "History USA"},
-{id: 656, name: "IFC TV USA"},
-{id: 325, name: "ION USA"},
-{id: 350, name: "ITV 1 UK"},
-{id: 351, name: "ITV 2 UK"},
-{id: 352, name: "ITV 3 UK"},
-{id: 353, name: "ITV 4 UK"},
-{id: 770, name: "Marquee Sports Network"},
-{id: 829, name: "MASN USA"},
-{id: 646, name: "MAVTV USA"},
-{id: 791, name: "MGM+ USA / Epix"},
-{id: 399, name: "MLB Network USA"},
-{id: 924, name: "Monumental Sports Network"},
-{id: 661, name: "Motor Trend"},
-{id: 765, name: "MSG USA"},
-{id: 327, name: "MSNBC"},
-{id: 806, name: "MTV Denmark"},
-{id: 367, name: "MTV UK"},
-{id: 371, name: "MTV USA"},
-{id: 377, name: "MUTV UK"},
-{id: 654, name: "MY9TV USA"},
-{id: 328, name: "National Geographic (NGC)"},
-{id: 404, name: "NBA TV USA"},
-{id: 753, name: "NBC Sports Bay Area"},
-{id: 754, name: "NBC Sports Boston"},
-{id: 755, name: "NBC Sports California"},
-{id: 777, name: "NBC Sports Philadelphia"},
-{id: 778, name: "NBC Sports Washington"},
-{id: 53, name: "NBC USA"},
-{id: 277, name: "NBC10 Philadelphia"},
-{id: 769, name: "NBCNY USA"},
-{id: 762, name: "NESN USA"},
-{id: 292, name: "NewsNation USA"},
-{id: 405, name: "NFL Network"},
-{id: 663, name: "NHL Network USA"},
-{id: 330, name: "NICK"},
-{id: 329, name: "NICK JR"},
-{id: 666, name: "Nick Music"},
-{id: 649, name: "Nicktoons"},
-{id: 334, name: "Paramount Network"},
-{id: 210, name: "PBS USA USA"},
-{id: 450, name: "PTV Sports"},
-{id: 920, name: "Root Sports Northwest"},
-{id: 385, name: "SEC Network USA"},
-{id: 588, name: "Sky Sport 1 NZ"},
-{id: 589, name: "Sky Sport 2 NZ"},
-{id: 590, name: "Sky Sport 3 NZ"},
-{id: 591, name: "Sky Sport 4 NZ"},
-{id: 592, name: "Sky Sport 5 NZ"},
-{id: 593, name: "Sky Sport 6 NZ"},
-{id: 594, name: "Sky Sport 7 NZ"},
-{id: 595, name: "Sky Sport 8 NZ"},
-{id: 596, name: "Sky Sport 9 NZ"},
-{id: 37, name: "Sky Sports Action UK"},
-{id: 36, name: "Sky Sports Arena UK"},
-{id: 65, name: "Sky Sports Cricket"},
-{id: 60, name: "Sky Sports F1 UK"},
-{id: 35, name: "Sky Sports Football UK"},
-{id: 70, name: "Sky Sports Golf UK"},
-{id: 38, name: "Sky Sports Main Event"},
-{id: 449, name: "Sky Sports MIX UK"},
-{id: 366, name: "Sky Sports News UK"},
-{id: 130, name: "Sky sports Premier League"},
-{id: 554, name: "Sky Sports Racing UK"},
-{id: 46, name: "Sky Sports Tennis UK"},
-{id: 361, name: "Sky Witness HD"},
-{id: 885, name: "SONY TEN 1 HD"},
-{id: 886, name: "SONY TEN 2 HD"},
-{id: 881, name: "SONY TEN 3 HD"},
-{id: 921, name: "Space City Home Network"},
-{id: 764, name: "Spectrum Sportsnet LA"},
-{id: 409, name: "Sportsnet 360"},
-{id: 408, name: "Sportsnet East"},
-{id: 759, name: "SportsNet New York (SNY)"},
-{id: 411, name: "Sportsnet One"},
-{id: 406, name: "Sportsnet Ontario"},
-{id: 922, name: "SportsNet Pittsburgh"},
-{id: 407, name: "Sportsnet West"},
-{id: 410, name: "Sportsnet World"},
-{
-  id: 'star1',
-  name: 'Star Sports 1 India',
-  customUrl: 'https://stream.crichd.sc/update/star.php'
-},
-{id: 335, name: "Starz"},
-{id: 284, name: "StarzPlay CricLife 1 HD"},
-{id: 283, name: "StarzPlay CricLife 2 HD"},
-{id: 282, name: "StarzPlay CricLife 3 HD"},
-{id: 658, name: "Sundance TV"},
-{id: 420, name: "SuperSport Action"},
-{id: 368, name: "SuperSport Cricket"},
-{id: 56, name: "Supersport Football"},
-{id: 422, name: "SuperSport Golf"},
-{id: 412, name: "SuperSport Grandstand"},
-{id: 415, name: "SuperSport LaLiga"},
-{id: 572, name: "SuperSport MaXimo 1"},
-{id: 424, name: "SuperSport Motorsport"},
-{id: 414, name: "SuperSport Premier league"},
-{id: 413, name: "SuperSport PSL"},
-{id: 421, name: "SuperSport Rugby"},
-{id: 423, name: "SuperSport Tennis"},
-{id: 416, name: "SuperSport Variety 1"},
-{id: 417, name: "SuperSport Variety 2"},
-{id: 418, name: "SuperSport Variety 3"},
-{id: 419, name: "SuperSport Variety 4"},
-{id: 373, name: "SYFY USA"},
-{id: 336, name: "TBS USA"},
-{id: 644, name: "TCM USA"},
-{id: 650, name: "TeenNick"},
-{id: 131, name: "Telemundo"},
-{id: 741, name: "Ten Sports PK"},
-{id: 40, name: "Tennis Channel"},
-{id: 384, name: "The Food Network"},
-{id: 394, name: "The Weather Channel"},
-{id: 337, name: "TLC"},
-{id: 698, name: "TMC Channel USA"},
-{id: 31, name: "TNT Sports 1 UK"},
-{id: 32, name: "TNT Sports 2 UK"},
-{id: 33, name: "TNT Sports 3 UK"},
-{id: 34, name: "TNT Sports 4 UK"},
-{id: 338, name: "TNT USA"},
-{id: 340, name: "Travel Channel"},
-{id: 341, name: "TruTV USA"},
-{id: 111, name: "TSN1"},
-{id: 112, name: "TSN2"},
-{id: 113, name: "TSN3"},
-{id: 114, name: "TSN4"},
-{id: 115, name: "TSN5"},
-{id: 66, name: "TUDN USA"},
-{id: 660, name: "TV ONE USA"},
-{id: 342, name: "TVLAND"},
-{id: 133, name: "Unimas"},
-{id: 132, name: "Univision"},
-{id: 343, name: "USA Network"},
-{id: 344, name: "VH1 USA"},
-{id: 451, name: "Viaplay Sports 1 UK"},
-{id: 550, name: "Viaplay Sports 2 UK"},
-{id: 597, name: "Viaplay Xtra UK"},
-{id: 659, name: "VICE TV"},
-{id: 346, name: "Willow Cricket"},
-{id: 598, name: "Willow XTRA"},
-{id: 376, name: "WWE Network"},
-{id: 763, name: "YES Network USA"},
-{id: 501, name: "18+ (Player-01)"},
-{id: 502, name: "18+ (Player-02)"},
-{id: 503, name: "18+ (Player-03)"},
-{id: 504, name: "18+ (Player-04)"},
-{id: 505, name: "18+ (Player-05)"},
-{id: 506, name: "18+ (Player-06)"},
-{id: 507, name: "18+ (Player-07)"},
-{id: 508, name: "18+ (Player-08)"},
-{id: 509, name: "18+ (Player-09)"},
-{id: 510, name: "18+ (Player-10)"},
-{id: 511, name: "18+ (Player-11)"},
-{id: 512, name: "18+ (Player-12)"},
-{id: 513, name: "18+ (Player-13)"},
-{id: 514, name: "18+ (Player-14)"},
-{id: 515, name: "18+ (Player-15)"},
-{id: 516, name: "18+ (Player-16)"},
-{id: 517, name: "18+ (Player-17)"},
-{id: 518, name: "18+ (Player-18)"},
-{id: 519, name: "18+ (Player-19)"},
-{id: 520, name: "18+ (Player-20)"}
-];
-  </script>
-
-  <script>
-    // Toggle functions for sidebars
-    function toggleSidebar() {
-      document.getElementById("sidebar").classList.toggle("open");
-    }
-    function toggleChannelSidebar() {
-      document.getElementById("channelSidebar").classList.toggle("open");
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-      // Now you can use the 'channels' variable in your code.
-      populateChannelList();
-        loadSchedule();
- document.getElementById('updateStreams').addEventListener('click', updateStreams);
- document.getElementById('clearStreams').addEventListener('click', clearStreams);
-  loadStreams();
-async function loadSchedule() {
-    try {
-        const response = await fetch("https://api.allorigins.win/raw?url=https://daddylive.mp/schedule/schedule-generated.json");
-        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-        const scheduleData = await response.json();
-        displaySchedule(scheduleData);
-    } catch (error) {
-        console.error("Error loading schedule:", error);
-        document.getElementById("scheduleContainer").textContent = "Failed to load schedule";
-    }
-}
-      function populateChannelList() {
-        const container = document.getElementById('channelList');
-        if (!channels) {
-          console.error("Channels data not loaded or is undefined");
-          return;
-        }
-        channels.forEach(channel => {
-          const div = document.createElement('div');
-          div.className = 'channel-item';
-          div.textContent = `${channel.id} ${channel.name}`;
-          div.dataset.channelId = channel.id;
-          div.addEventListener('click', fillEmptyStream);
-          container.appendChild(div);
-        });
-      }
-function saveStreams() {
-  const streams = [];
-  for (let i = 1; i <= 6; i++) {
-    streams.push(document.getElementById(`streamInput${i}`).value);
-  }
-  localStorage.setItem('savedStreams', JSON.stringify(streams));
-}
-
-// Load streams
-function loadStreams() {
-  const savedStreams = JSON.parse(localStorage.getItem('savedStreams')) || [];
-  savedStreams.forEach((streamId, index) => {
-    document.getElementById(`streamInput${index + 1}`).value = streamId;
-  });
-  if (savedStreams.length > 0) updateStreams();
-}
-document.addEventListener('keydown', (e) => {
-  if (e.ctrlKey) {
-    if (e.key >= '1' && e.key <= '6') {
-      document.getElementById(`streamInput${e.key}`).focus();
-    } else if (e.key === 'Enter') {
-      updateStreams();
-    } else if (e.key === 'Backspace') {
-      clearStreams();
-    }
-  }
-});
-      function fillEmptyStream(event) {
-        const inputs = document.querySelectorAll("input[type='text']");
-        for (let input of inputs) {
-          if (input.value.trim() === "") {
-            input.value = event.target.dataset.channelId;
-            break;
-          }
-        }
-      }
-    function displaySchedule(scheduleData) {
-      const container = document.getElementById("scheduleContainer");
-      container.innerHTML = "";
-
-      try {
-        Object.keys(scheduleData).forEach(date => {
-          Object.entries(scheduleData[date]).forEach(([category, events]) => {
-            // Add null checks for events
-          if (!events) return;
-          if (category.toLowerCase().includes('tennis')) return;
-
-          // Filter out tennis events
-          const filteredEvents = events.filter(event => 
-          event.event && !event.event.toLowerCase().includes('tennis')
-          );
-
-          if (filteredEvents.length === 0) return;
-
-          const categoryContainer = document.createElement("div");
-          const categoryHeader = document.createElement("div");
-          const eventsContainer = document.createElement("div");
-          
-          categoryHeader.className = "category-header";
-          categoryHeader.innerHTML = `
-            <span>${category}</span>
-            <span>▶</span>
-          `;
-          
-          eventsContainer.className = "category-events collapsed";
-          
-          categoryHeader.addEventListener("click", () => {
-            eventsContainer.classList.toggle("collapsed");
-              if (!eventsContainer.classList.contains("collapsed")) {
-    categoryHeader.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  }
-            categoryHeader.querySelector("span:last-child").textContent = 
-              eventsContainer.classList.contains("collapsed") ? "▶" : "▼";
-          });
-
-          filteredEvents.forEach(event => {
-            const eventDiv = document.createElement("div");
-            eventDiv.className = "event";
-            eventDiv.innerHTML = `<h3>${event.time} - ${event.event}</h3>`;
-            
-            event.channels.forEach(channel => {
-              const channelDiv = document.createElement("div");
-              channelDiv.className = "channel";
-              channelDiv.textContent = channel.channel_name;
-              channelDiv.dataset.channelId = channel.channel_id;
-              channelDiv.addEventListener("click", fillEmptyStream);
-              eventDiv.appendChild(channelDiv);
-            });
-
-            eventsContainer.appendChild(eventDiv);
-          });
-
-          categoryContainer.appendChild(categoryHeader);
-          categoryContainer.appendChild(eventsContainer);
-          container.appendChild(categoryContainer);
-        });
-      });
-              } catch (e) {
-        console.error("Error displaying schedule:", e);
-        container.textContent = "Error displaying schedule data";
-      }
-    }
-
-function fillEmptyStream(event) {
-    let inputs = document.querySelectorAll("input[type='text']");
-    for (let input of inputs) {
-        if (input.value.trim() === "") {
-            input.value = event.target.dataset.channelId;
-            break; // Stop after filling the first empty field
-        }
-    }
-}
-    });
-    
-function updateStreams() {
-  try {
-    const streamsContainer = document.getElementById('streamsContainer');
-    streamsContainer.innerHTML = '';
-    
-    let streamCount = 0;
-    
-    for(let i = 1; i <= 6; i++) {
-      const streamId = document.getElementById(`streamInput${i}`).value.trim();
-      if(streamId) {
-        streamCount++;
-        const channel = channels.find(ch => ch.id == streamId);
-        const wrapper = document.createElement('div');
-        wrapper.className = 'iframe-wrapper';
-        
-        const streamUrl = channel?.customUrl || `https://daddylive.mp/embed/stream-${streamId}.php`;
-        
-        wrapper.innerHTML = `
-          <iframe src="${streamUrl}" 
-                  allowfullscreen></iframe>
-        `;
-        streamsContainer.appendChild(wrapper);
-      }
-    }
-
-    // Set data attribute for CSS rules
-    streamsContainer.setAttribute('data-stream-count', streamCount);
-    
-    // Force mobile layout even if desktop width
-    const isMobile = window.matchMedia("(max-width: 768px)").matches;
-    if(isMobile) {
-      streamsContainer.style.gridTemplateColumns = '1fr';
-    } else {
-      streamsContainer.style.gridTemplateColumns = ''; // Reset to CSS rules
-    }
-
-  } catch (e) {
-    console.error("Error updating streams:", e);
-  }
-}
-    function clearStreams() {
-  // Clear all input fields
-  for(let i = 1; i <= 6; i++) {
-    document.getElementById(`streamInput${i}`).value = '';
-  }
-  
-  // Clear embedded streams
-  const streamsContainer = document.getElementById('streamsContainer');
-  streamsContainer.innerHTML = '';
-  
-  // Optional: Reset to default layout
-  streamsContainer.classList.remove('custom-layout');
-}
-  </script>
-</body>
+   <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>Dynamic Stream Embed</title>
+      <style>
+         * {
+         margin: 0;
+         padding: 0;
+         box-sizing: border-box;
+         }
+         body, html {
+         width: 100%;
+         height: 100%;
+         font-family: sans-serif;
+         background: #121212;
+         color: white;
+         display: flex;
+         }
+         .top-controls {
+         display: flex;
+         flex-wrap: wrap;
+         gap: 10px;
+         align-items: center;
+         justify-content: space-between;
+         margin-bottom: 20px;
+         }
+         .channel-sidebar {
+         width: 250px;
+         height: 100vh;
+         background: #222;
+         color: white;
+         overflow-y: auto;
+         padding: 15px;
+         position: fixed;
+         right: -250px;
+         transition: right 0.3s;
+         }
+         .channel-sidebar.open {
+         right: 0;
+         }
+         .channel-sidebar h2 {
+         font-size: 18px;
+         text-align: center;
+         margin-bottom: 15px;
+         }
+         .channel-list {
+         display: flex;
+         flex-direction: column;
+         gap: 8px;
+         }
+         .channel-item {
+         padding: 10px;
+         background: #333;
+         border-radius: 5px;
+         cursor: pointer;
+         transition: background 0.2s;
+         }
+         .channel-item:hover {
+         background: #444;
+         }
+         .sidebar {
+         width: 300px;
+         height: 100vh;
+         background: #222;
+         color: white;
+         overflow-y: auto;
+         padding: 15px;
+         position: fixed;
+         left: -300px;
+         transition: left 0.3s;
+         }
+         .sidebar.open {
+         left: 0;
+         }
+         .sidebar h2 {
+         font-size: 18px;
+         text-align: center;
+         margin-bottom: 10px;
+         position: relative;
+         }
+         .close-sidebar {
+         position: absolute;
+         right: 15px;
+         top: 50%;
+         transform: translateY(-50%);
+         background: none;
+         border: none;
+         color: white;
+         font-size: 20px;
+         cursor: pointer;
+         padding: 5px;
+         }
+         .category-header {
+         cursor: pointer;
+         padding: 10px;
+         background: #333;
+         border-radius: 5px;
+         margin: 10px 0;
+         display: flex;
+         justify-content: space-between;
+         align-items: center;
+         }
+         .category-header:hover {
+         background: #3a3a3a;
+         }
+         .category-events {
+         overflow-y: hidden;
+         transition: max-height 0.3s ease-out;
+         max-height: 0;
+         }
+         .category-events:not(.collapsed) {
+         max-height: 80vh; /* Limits height to 80% of viewport */
+         overflow-y: auto;
+         padding-right: 5px; /* Space for scrollbar */
+         }
+         .category-events.collapsed {
+         max-height: 0;
+         }
+         .category-events::-webkit-scrollbar {
+         width: 8px;
+         }
+         .category-events::-webkit-scrollbar-track {
+         background: #333;
+         }
+         .category-events::-webkit-scrollbar-thumb {
+         background: #666;
+         border-radius: 4px;
+         }
+         .category-events::-webkit-scrollbar-thumb:hover {
+         background: #888;
+         }
+         .event {
+         margin-bottom: 10px;
+         padding: 10px;
+         background: #333;
+         border-radius: 5px;
+         }
+         .channel {
+         cursor: pointer;
+         padding: 5px;
+         background: #444;
+         border-radius: 3px;
+         margin-top: 5px;
+         text-align: center;
+         }
+         .channel:hover {
+         background: #555;
+         }
+         button {
+         padding: 10px 15px;
+         font-size: 16px;
+         background-color: #333;
+         color: #fff;
+         border: none;
+         border-radius: 5px;
+         cursor: pointer;
+         height: 40px;
+         }
+         button:hover {
+         background-color: #555;
+         }
+         input {
+         padding: 10px;
+         font-size: 16px;
+         background-color: #333;
+         color: #fff;
+         border: none;
+         border-radius: 5px;
+         height: 40px;
+         flex: 1;
+         min-width: 150px;
+         }
+         .main-content {
+         margin: 0 0;
+         width: 100%;
+         padding: 20px;
+         transition: margin 0.3s;
+         }
+         .sidebar.open ~ .main-content {
+         margin-left: 300px;
+         }
+         .channel-sidebar.open ~ .main-content {
+         margin-right: 250px;
+         }
+         .streams-grid {
+         display: grid;
+         margin-top: 20px;
+         /* Default layout for 3-4 streams */
+         grid-template-columns: repeat(2, 1fr);
+         }
+         .iframe-wrapper {
+         position: relative;
+         width: 100%;
+         padding-top: 56.25%;
+         background: #000;
+         border-radius: 8px;
+         overflow: hidden;
+         }
+         .iframe-wrapper iframe {
+         position: absolute;
+         top: 0;
+         left: 0;
+         width: 100%;
+         height: 100%;
+         border: none;
+         }
+         @media (min-width: 769px) {
+         /* Single stream - full width */
+         .streams-grid[data-stream-count="1"] {
+         grid-template-columns: 1fr;
+         }
+         /* Two streams - 2 columns */
+         .streams-grid[data-stream-count="2"] {
+         grid-template-columns: repeat(2, 1fr);
+         }
+         /* 5-6 streams - 3 columns */
+         .streams-grid[data-stream-count="5"],
+         .streams-grid[data-stream-count="6"] {
+         grid-template-columns: repeat(3, 1fr);
+         }
+         }
+         @media (max-width: 768px) {
+         .streams-grid {
+         grid-template-columns: 1fr;
+         }
+         }
+      </style>
+   </head>
+   <body>
+      <!-- Your HTML structure -->
+      <div id="sidebar" class="sidebar">
+         <h2>📅 Event Schedule
+            <button class="close-sidebar" onclick="toggleSidebar()">×</button>
+         </h2>
+         <div id="scheduleContainer">Loading...</div>
+      </div>
+      <div id="channelSidebar" class="channel-sidebar">
+         <h2>📺 Channel List</h2>
+         <div class="channel-list" id="channelList"></div>
+      </div>
+      <div class="main-content">
+         <div class="top-controls">
+            <button class="sidebar-toggle" onclick="toggleSidebar()">📅 Show Schedule</button>
+            <input type="text" id="streamInput1" placeholder="Stream 1">
+            <input type="text" id="streamInput2" placeholder="Stream 2">
+            <input type="text" id="streamInput3" placeholder="Stream 3">
+            <input type="text" id="streamInput4" placeholder="Stream 4">
+            <input type="text" id="streamInput5" placeholder="Stream 5">
+            <input type="text" id="streamInput6" placeholder="Stream 6">
+            <button id="updateStreams">Update Streams</button>
+            <button id="clearStreams">Clear Streams</button>
+            <button class="channel-toggle" onclick="toggleChannelSidebar()">📺 Channels</button>
+         </div>
+         <div id="streamsContainer" class="streams-grid"></div>
+      </div>
+      <!-- Insert channel data directly -->
+      <script>
+         // Fixed version of channels data (with commas between objects)
+         const channels = [
+         {id: 360, name: "5 USA"},
+         {id: 269, name: "A Sport PK"},
+         {id: 302, name: "A&E USA"},
+         {id: 51, name: "ABC USA"},
+         {id: 766, name: "ABCNY USA"},
+         {id: 609, name: "Abu Dhabi Sports 1 Premium"},
+         {id: 600, name: "Abu Dhabi Sports 1 UAE"},
+         {id: 610, name: "Abu Dhabi Sports 2 Premium"},
+         {id: 601, name: "Abu Dhabi Sports 2 UAE"},
+         {id: 664, name: "ACC Network USA"},
+         {id: 295, name: "Adult Swim"},
+         {id: 923, name: "Altitude Sports"},
+         {id: 303, name: "AMC USA"},
+         {id: 304, name: "Animal Planet"},
+         {id: 370, name: "Astro Cricket"},
+         {id: 123, name: "Astro SuperSport 1"},
+         {id: 124, name: "Astro SuperSport 2"},
+         {id: 125, name: "Astro SuperSport 3"},
+         {id: 126, name: "Astro SuperSport 4"},
+         {id: 742, name: "AXS TV USA"},
+         {id: 891, name: "FanDuel Sports Detroit"},
+         {id: 892, name: "FanDuel Sports Florida"},
+         {id: 893, name: "FanDuel Sports Great Lakes"},
+         {id: 894, name: "FanDuel Sports Indiana"},
+         {id: 895, name: "FanDuel Sports Kansas City"},
+         {id: 896, name: "FanDuel Sports Midwest"},
+         {id: 898, name: "FanDuel Sports North"},
+         {id: 899, name: "FanDuel Sports Ohio"},
+         {id: 900, name: "FanDuel Sports Oklahoma"},
+         {id: 901, name: "FanDuel Sports San Diego"},
+         {id: 902, name: "FanDuel Sports SoCal"},
+         {id: 903, name: "FanDuel Sports South"},
+         {id: 904, name: "FanDuel Sports Southeast"},
+         {id: 905, name: "FanDuel Sports Sun"},
+         {id: 906, name: "FanDuel Sports West"},
+         {id: 907, name: "FanDuel Sports Wisconsin"},
+         {id: 727, name: "BBC 1 DE"},
+         {id: 305, name: "BBC America (BBCA)"},
+         {id: 359, name: "BBC Four UK"},
+         {id: 349, name: "BBC News Channel HD"},
+         {id: 356, name: "BBC One UK"},
+         {id: 358, name: "BBC Three UK"},
+         {id: 357, name: "BBC Two UK"},
+         {id: 306, name: "BET USA"},
+         {id: 397, name: "BIG TEN Network (BTN USA)"},
+         {id: 648, name: "Boomerang"},
+         {id: 307, name: "Bravo USA"},
+         {id: 750, name: "C SPAN 1"},
+         {id: 339, name: "Cartoon Network"},
+         {id: 832, name: "CBC CA"},
+         {id: 910, name: "CBS Sports Golazo"},
+         {id: 308, name: "CBS Sports Network (CBSSN)"},
+         {id: 52, name: "CBS USA"},
+         {id: 767, name: "CBSNY USA"},
+         {id: 354, name: "Channel 4 UK"},
+         {id: 355, name: "Channel 5 UK"},
+         {id: 374, name: "Cinemax USA"},
+         {id: 831, name: "Citytv"},
+         {id: 647, name: "CMT USA"},
+         {id: 309, name: "CNBC USA"},
+         {id: 345, name: "CNN USA"},
+         {id: 310, name: "Comedy Central"},
+         {id: 696, name: "Comet USA"},
+         {id: 697, name: "Cooking Channel USA"},
+         {id: 748, name: "COZI TV USA"},
+         {id: 838, name: "CTV 2 Canada"},
+         {id: 602, name: "CTV Canada"},
+         {id: 280, name: "CW PIX 11 USA"},
+         {id: 300, name: "CW USA"},
+         {id: 313, name: "Discovery Channel"},
+         {id: 285, name: "MotorTrend CA"},
+         {id: 312, name: "Disney Channel"},
+         {id: 315, name: "E! Entertainment Television"},
+         {id: 363, name: "E4 Channel"},
+         {id: 379, name: "ESPN 1 NL"},
+         {id: 386, name: "ESPN 2 NL"},
+         {id: 81, name: "ESPN Brasil"},
+         {id: 375, name: "ESPN Deportes"},
+         {id: 798, name: "ESPN Extra Argentina"},
+         {id: 387, name: "ESPN Premium Argentina"},
+         {id: 149, name: "ESPN SUR"},
+         {id: 44, name: "ESPN USA"},
+         {id: 82, name: "ESPN2 Brasil"},
+         {id: 150, name: "ESPN2 SUR"},
+         {id: 45, name: "ESPN2 USA"},
+         {id: 83, name: "ESPN3 Brasil"},
+         {id: 85, name: "ESPN4 Brasil"},
+         {id: 288, name: "ESPNews"},
+         {id: 316, name: "ESPNU USA"},
+         {id: 41, name: "EuroSport 1 UK"},
+         {id: 42, name: "EuroSport 2 UK"},
+         {id: 369, name: "Fox Cricket"},
+         {id: 643, name: "FOX Deportes USA"},
+         {id: 756, name: "FOX Soccer Plus"},
+         {id: 39, name: "Fox Sports 1 USA"},
+         {id: 758, name: "Fox Sports 2 USA"},
+         {id: 820, name: "FOX Sports 502 AU"},
+         {id: 821, name: "FOX Sports 503 AU"},
+         {id: 822, name: "FOX Sports 504 AU"},
+         {id: 823, name: "FOX Sports 505 AU"},
+         {id: 824, name: "FOX Sports 506 AU"},
+         {id: 825, name: "FOX Sports 507 AU"},
+         {id: 54, name: "FOX USA"},
+         {id: 768, name: "FOXNY USA"},
+         {id: 301, name: "Freeform"},
+         {id: 279, name: "FUSE TV USA"},
+         {id: 381, name: "FX Movie Channel"},
+         {id: 317, name: "FX USA"},
+         {id: 298, name: "FXX USA"},
+         {id: 319, name: "Game Show Network"},
+         {id: 836, name: "Global CA"},
+         {id: 318, name: "GOLF Channel USA"},
+         {id: 752, name: "Grit Channel"},
+         {id: 690, name: "HBO Comedy USA"},
+         {id: 691, name: "HBO Family USA"},
+         {id: 693, name: "HBO Signature USA"},
+         {id: 321, name: "HBO USA"},
+         {id: 694, name: "HBO Zone USA"},
+         {id: 689, name: "HBO2 USA"},
+         {id: 323, name: "Headline News"},
+         {id: 322, name: "History USA"},
+         {id: 656, name: "IFC TV USA"},
+         {id: 325, name: "ION USA"},
+         {id: 350, name: "ITV 1 UK"},
+         {id: 351, name: "ITV 2 UK"},
+         {id: 352, name: "ITV 3 UK"},
+         {id: 353, name: "ITV 4 UK"},
+         {id: 770, name: "Marquee Sports Network"},
+         {id: 829, name: "MASN USA"},
+         {id: 646, name: "MAVTV USA"},
+         {id: 791, name: "MGM+ USA / Epix"},
+         {id: 399, name: "MLB Network USA"},
+         {id: 924, name: "Monumental Sports Network"},
+         {id: 661, name: "Motor Trend"},
+         {id: 765, name: "MSG USA"},
+         {id: 327, name: "MSNBC"},
+         {id: 806, name: "MTV Denmark"},
+         {id: 367, name: "MTV UK"},
+         {id: 371, name: "MTV USA"},
+         {id: 377, name: "MUTV UK"},
+         {id: 654, name: "MY9TV USA"},
+         {id: 328, name: "National Geographic (NGC)"},
+         {id: 404, name: "NBA TV USA"},
+         {id: 753, name: "NBC Sports Bay Area"},
+         {id: 754, name: "NBC Sports Boston"},
+         {id: 755, name: "NBC Sports California"},
+         {id: 777, name: "NBC Sports Philadelphia"},
+         {id: 778, name: "NBC Sports Washington"},
+         {id: 53, name: "NBC USA"},
+         {id: 277, name: "NBC10 Philadelphia"},
+         {id: 769, name: "NBCNY USA"},
+         {id: 762, name: "NESN USA"},
+         {id: 292, name: "NewsNation USA"},
+         {id: 405, name: "NFL Network"},
+         {id: 663, name: "NHL Network USA"},
+         {id: 330, name: "NICK"},
+         {id: 329, name: "NICK JR"},
+         {id: 666, name: "Nick Music"},
+         {id: 649, name: "Nicktoons"},
+         {id: 334, name: "Paramount Network"},
+         {id: 210, name: "PBS USA USA"},
+         {id: 450, name: "PTV Sports"},
+         {id: 920, name: "Root Sports Northwest"},
+         {id: 385, name: "SEC Network USA"},
+         {id: 588, name: "Sky Sport 1 NZ"},
+         {id: 589, name: "Sky Sport 2 NZ"},
+         {id: 590, name: "Sky Sport 3 NZ"},
+         {id: 591, name: "Sky Sport 4 NZ"},
+         {id: 592, name: "Sky Sport 5 NZ"},
+         {id: 593, name: "Sky Sport 6 NZ"},
+         {id: 594, name: "Sky Sport 7 NZ"},
+         {id: 595, name: "Sky Sport 8 NZ"},
+         {id: 596, name: "Sky Sport 9 NZ"},
+         {id: 37, name: "Sky Sports Action UK"},
+         {id: 36, name: "Sky Sports Arena UK"},
+         {id: 65, name: "Sky Sports Cricket"},
+         {id: 60, name: "Sky Sports F1 UK"},
+         {id: 35, name: "Sky Sports Football UK"},
+         {id: 70, name: "Sky Sports Golf UK"},
+         {id: 38, name: "Sky Sports Main Event"},
+         {id: 449, name: "Sky Sports MIX UK"},
+         {id: 366, name: "Sky Sports News UK"},
+         {id: 130, name: "Sky sports Premier League"},
+         {id: 554, name: "Sky Sports Racing UK"},
+         {id: 46, name: "Sky Sports Tennis UK"},
+         {id: 361, name: "Sky Witness HD"},
+         {id: 885, name: "SONY TEN 1 HD"},
+         {id: 886, name: "SONY TEN 2 HD"},
+         {id: 881, name: "SONY TEN 3 HD"},
+         {id: 921, name: "Space City Home Network"},
+         {id: 764, name: "Spectrum Sportsnet LA"},
+         {id: 409, name: "Sportsnet 360"},
+         {id: 408, name: "Sportsnet East"},
+         {id: 759, name: "SportsNet New York (SNY)"},
+         {id: 411, name: "Sportsnet One"},
+         {id: 406, name: "Sportsnet Ontario"},
+         {id: 922, name: "SportsNet Pittsburgh"},
+         {id: 407, name: "Sportsnet West"},
+         {id: 410, name: "Sportsnet World"},
+         {
+         id: 'star1',
+         name: 'Star Sports 1 India',
+         customUrl: 'https://stream.crichd.sc/update/star.php'
+         },
+         {id: 335, name: "Starz"},
+         {id: 284, name: "StarzPlay CricLife 1 HD"},
+         {id: 283, name: "StarzPlay CricLife 2 HD"},
+         {id: 282, name: "StarzPlay CricLife 3 HD"},
+         {id: 658, name: "Sundance TV"},
+         {id: 420, name: "SuperSport Action"},
+         {id: 368, name: "SuperSport Cricket"},
+         {id: 56, name: "Supersport Football"},
+         {id: 422, name: "SuperSport Golf"},
+         {id: 412, name: "SuperSport Grandstand"},
+         {id: 415, name: "SuperSport LaLiga"},
+         {id: 572, name: "SuperSport MaXimo 1"},
+         {id: 424, name: "SuperSport Motorsport"},
+         {id: 414, name: "SuperSport Premier league"},
+         {id: 413, name: "SuperSport PSL"},
+         {id: 421, name: "SuperSport Rugby"},
+         {id: 423, name: "SuperSport Tennis"},
+         {id: 416, name: "SuperSport Variety 1"},
+         {id: 417, name: "SuperSport Variety 2"},
+         {id: 418, name: "SuperSport Variety 3"},
+         {id: 419, name: "SuperSport Variety 4"},
+         {id: 373, name: "SYFY USA"},
+         {id: 336, name: "TBS USA"},
+         {id: 644, name: "TCM USA"},
+         {id: 650, name: "TeenNick"},
+         {id: 131, name: "Telemundo"},
+         {id: 741, name: "Ten Sports PK"},
+         {id: 40, name: "Tennis Channel"},
+         {id: 384, name: "The Food Network"},
+         {id: 394, name: "The Weather Channel"},
+         {id: 337, name: "TLC"},
+         {id: 698, name: "TMC Channel USA"},
+         {id: 31, name: "TNT Sports 1 UK"},
+         {id: 32, name: "TNT Sports 2 UK"},
+         {id: 33, name: "TNT Sports 3 UK"},
+         {id: 34, name: "TNT Sports 4 UK"},
+         {id: 338, name: "TNT USA"},
+         {id: 340, name: "Travel Channel"},
+         {id: 341, name: "TruTV USA"},
+         {id: 111, name: "TSN1"},
+         {id: 112, name: "TSN2"},
+         {id: 113, name: "TSN3"},
+         {id: 114, name: "TSN4"},
+         {id: 115, name: "TSN5"},
+         {id: 66, name: "TUDN USA"},
+         {id: 660, name: "TV ONE USA"},
+         {id: 342, name: "TVLAND"},
+         {id: 133, name: "Unimas"},
+         {id: 132, name: "Univision"},
+         {id: 343, name: "USA Network"},
+         {id: 344, name: "VH1 USA"},
+         {id: 451, name: "Viaplay Sports 1 UK"},
+         {id: 550, name: "Viaplay Sports 2 UK"},
+         {id: 597, name: "Viaplay Xtra UK"},
+         {id: 659, name: "VICE TV"},
+         {id: 346, name: "Willow Cricket"},
+         {id: 598, name: "Willow XTRA"},
+         {id: 376, name: "WWE Network"},
+         {id: 763, name: "YES Network USA"},
+         {id: 501, name: "18+ (Player-01)"},
+         {id: 502, name: "18+ (Player-02)"},
+         {id: 503, name: "18+ (Player-03)"},
+         {id: 504, name: "18+ (Player-04)"},
+         {id: 505, name: "18+ (Player-05)"},
+         {id: 506, name: "18+ (Player-06)"},
+         {id: 507, name: "18+ (Player-07)"},
+         {id: 508, name: "18+ (Player-08)"},
+         {id: 509, name: "18+ (Player-09)"},
+         {id: 510, name: "18+ (Player-10)"},
+         {id: 511, name: "18+ (Player-11)"},
+         {id: 512, name: "18+ (Player-12)"},
+         {id: 513, name: "18+ (Player-13)"},
+         {id: 514, name: "18+ (Player-14)"},
+         {id: 515, name: "18+ (Player-15)"},
+         {id: 516, name: "18+ (Player-16)"},
+         {id: 517, name: "18+ (Player-17)"},
+         {id: 518, name: "18+ (Player-18)"},
+         {id: 519, name: "18+ (Player-19)"},
+         {id: 520, name: "18+ (Player-20)"}
+         ];
+      </script>
+      <script>
+         // Toggle functions for sidebars
+         function toggleSidebar() {
+           document.getElementById("sidebar").classList.toggle("open");
+         }
+         function toggleChannelSidebar() {
+           document.getElementById("channelSidebar").classList.toggle("open");
+         }
+         
+         document.addEventListener('DOMContentLoaded', function() {
+           // Now you can use the 'channels' variable in your code.
+           populateChannelList();
+             loadSchedule();
+         document.getElementById('updateStreams').addEventListener('click', updateStreams);
+         document.getElementById('clearStreams').addEventListener('click', clearStreams);
+         loadStreams();
+         async function loadSchedule() {
+         try {
+             const response = await fetch("https://api.allorigins.win/raw?url=https://daddylive.mp/schedule/schedule-generated.json");
+             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+             const scheduleData = await response.json();
+             displaySchedule(scheduleData);
+         } catch (error) {
+             console.error("Error loading schedule:", error);
+             document.getElementById("scheduleContainer").textContent = "Failed to load schedule";
+         }
+         }
+           function populateChannelList() {
+             const container = document.getElementById('channelList');
+             if (!channels) {
+               console.error("Channels data not loaded or is undefined");
+               return;
+             }
+             channels.forEach(channel => {
+               const div = document.createElement('div');
+               div.className = 'channel-item';
+               div.textContent = `${channel.id} ${channel.name}`;
+               div.dataset.channelId = channel.id;
+               div.addEventListener('click', fillEmptyStream);
+               container.appendChild(div);
+             });
+           }
+         function saveStreams() {
+         const streams = [];
+         for (let i = 1; i <= 6; i++) {
+         streams.push(document.getElementById(`streamInput${i}`).value);
+         }
+         localStorage.setItem('savedStreams', JSON.stringify(streams));
+         }
+         
+         // Load streams
+         function loadStreams() {
+         const savedStreams = JSON.parse(localStorage.getItem('savedStreams')) || [];
+         savedStreams.forEach((streamId, index) => {
+         document.getElementById(`streamInput${index + 1}`).value = streamId;
+         });
+         if (savedStreams.length > 0) updateStreams();
+         }
+         document.addEventListener('keydown', (e) => {
+         if (e.ctrlKey) {
+         if (e.key >= '1' && e.key <= '6') {
+           document.getElementById(`streamInput${e.key}`).focus();
+         } else if (e.key === 'Enter') {
+           updateStreams();
+         } else if (e.key === 'Backspace') {
+           clearStreams();
+         }
+         }
+         });
+           function fillEmptyStream(event) {
+             const inputs = document.querySelectorAll("input[type='text']");
+             for (let input of inputs) {
+               if (input.value.trim() === "") {
+                 input.value = event.target.dataset.channelId;
+                 break;
+               }
+             }
+           }
+         function displaySchedule(scheduleData) {
+           const container = document.getElementById("scheduleContainer");
+           container.innerHTML = "";
+         
+           try {
+             Object.keys(scheduleData).forEach(date => {
+               Object.entries(scheduleData[date]).forEach(([category, events]) => {
+                 // Add null checks for events
+               if (!events) return;
+               if (category.toLowerCase().includes('tennis')) return;
+         
+               // Filter out tennis events
+               const filteredEvents = events.filter(event => 
+               event.event && !event.event.toLowerCase().includes('tennis')
+               );
+         
+               if (filteredEvents.length === 0) return;
+         
+               const categoryContainer = document.createElement("div");
+               const categoryHeader = document.createElement("div");
+               const eventsContainer = document.createElement("div");
+               
+               categoryHeader.className = "category-header";
+               categoryHeader.innerHTML = `
+                 <span>${category}</span>
+                 <span>▶</span>
+               `;
+               
+               eventsContainer.className = "category-events collapsed";
+               
+               categoryHeader.addEventListener("click", () => {
+                 eventsContainer.classList.toggle("collapsed");
+                   if (!eventsContainer.classList.contains("collapsed")) {
+         categoryHeader.scrollIntoView({ behavior: "smooth", block: "nearest" });
+         }
+                 categoryHeader.querySelector("span:last-child").textContent = 
+                   eventsContainer.classList.contains("collapsed") ? "▶" : "▼";
+               });
+         
+               filteredEvents.forEach(event => {
+                 const eventDiv = document.createElement("div");
+                 eventDiv.className = "event";
+                 eventDiv.innerHTML = `<h3>${event.time} - ${event.event}</h3>`;
+                 
+                 event.channels.forEach(channel => {
+                   const channelDiv = document.createElement("div");
+                   channelDiv.className = "channel";
+                   channelDiv.textContent = channel.channel_name;
+                   channelDiv.dataset.channelId = channel.channel_id;
+                   channelDiv.addEventListener("click", fillEmptyStream);
+                   eventDiv.appendChild(channelDiv);
+                 });
+         
+                 eventsContainer.appendChild(eventDiv);
+               });
+         
+               categoryContainer.appendChild(categoryHeader);
+               categoryContainer.appendChild(eventsContainer);
+               container.appendChild(categoryContainer);
+             });
+           });
+                   } catch (e) {
+             console.error("Error displaying schedule:", e);
+             container.textContent = "Error displaying schedule data";
+           }
+         }
+         
+         function fillEmptyStream(event) {
+         let inputs = document.querySelectorAll("input[type='text']");
+         for (let input of inputs) {
+             if (input.value.trim() === "") {
+                 input.value = event.target.dataset.channelId;
+                 break; // Stop after filling the first empty field
+             }
+         }
+         }
+         });
+         
+         function updateStreams() {
+         try {
+         const streamsContainer = document.getElementById('streamsContainer');
+         streamsContainer.innerHTML = '';
+         
+         let streamCount = 0;
+         
+         for(let i = 1; i <= 6; i++) {
+           const streamId = document.getElementById(`streamInput${i}`).value.trim();
+           if(streamId) {
+             streamCount++;
+             const channel = channels.find(ch => ch.id == streamId);
+             const wrapper = document.createElement('div');
+             wrapper.className = 'iframe-wrapper';
+             
+             const streamUrl = channel?.customUrl || `https://daddylive.mp/embed/stream-${streamId}.php`;
+             
+             wrapper.innerHTML = `
+               <iframe src="${streamUrl}" 
+                       allowfullscreen></iframe>
+             `;
+             streamsContainer.appendChild(wrapper);
+           }
+         }
+         
+         // Set data attribute for CSS rules
+         streamsContainer.setAttribute('data-stream-count', streamCount);
+         
+         // Force mobile layout even if desktop width
+         const isMobile = window.matchMedia("(max-width: 768px)").matches;
+         if(isMobile) {
+           streamsContainer.style.gridTemplateColumns = '1fr';
+         } else {
+           streamsContainer.style.gridTemplateColumns = ''; // Reset to CSS rules
+         }
+         
+         } catch (e) {
+         console.error("Error updating streams:", e);
+         }
+         }
+         function clearStreams() {
+         // Clear all input fields
+         for(let i = 1; i <= 6; i++) {
+         document.getElementById(`streamInput${i}`).value = '';
+         }
+         
+         // Clear embedded streams
+         const streamsContainer = document.getElementById('streamsContainer');
+         streamsContainer.innerHTML = '';
+         
+         // Optional: Reset to default layout
+         streamsContainer.classList.remove('custom-layout');
+         }
+      </script>
+   </body>
 </html>
