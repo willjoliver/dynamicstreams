@@ -204,9 +204,9 @@
       transition: margin 0.3s;
     }
 
-    .sidebar.open + .main-content {
-      margin-left: 300px;
-    }
+.sidebar.open ~ .main-content {
+  margin-left: 300px;
+}
     .channel-sidebar.open ~ .main-content {
       margin-right: 250px;
     }
@@ -580,10 +580,10 @@
     document.addEventListener('DOMContentLoaded', function() {
       // Now you can use the 'channels' variable in your code.
       populateChannelList();
+        loadSchedule();
  document.getElementById('updateStreams').addEventListener('click', updateStreams);
  document.getElementById('clearStreams').addEventListener('click', clearStreams);
- document.addEventListener('DOMContentLoaded', () => {
-  loadStreams();})
+  loadStreams();
 async function loadSchedule() {
     try {
         const response = await fetch("https://api.allorigins.win/raw?url=https://daddylive.mp/schedule/schedule-generated.json");
