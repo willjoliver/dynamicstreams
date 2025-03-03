@@ -272,6 +272,7 @@
       <input type="text" id="streamInput5" placeholder="Stream 5">
       <input type="text" id="streamInput6" placeholder="Stream 6">
       <button id="updateStreams">Update Streams</button>
+      <button id="clearStreams">Clear Streams</button>
       <button class="channel-toggle" onclick="toggleChannelSidebar()">📺 Channels</button>
     </div>
     <div id="streamsContainer" class="streams-grid"></div>
@@ -301,7 +302,6 @@
 {id: 125, name: "Astro SuperSport 3"},
 {id: 126, name: "Astro SuperSport 4"},
 {id: 742, name: "AXS TV USA"},
-{id: 844, name: "Azteca 7 MX"},
 {id: 891, name: "FanDuel Sports Detroit"},
 {id: 892, name: "FanDuel Sports Florida"},
 {id: 893, name: "FanDuel Sports Great Lakes"},
@@ -452,7 +452,6 @@
 {id: 795, name: "Showtime Family Zone (SHO Family Zone) USA"},
 {id: 796, name: "Showtime Next (SHO Next) USA"},
 {id: 793, name: "Showtime Showcase USA"},
-{id: 685, name: "Showtime SHOxBET USA"},
 {id: 333, name: "Showtime USA"},
 {id: 797, name: "Showtime Women USA"},
 {id: 683, name: "Sky Arts UK"},
@@ -469,7 +468,6 @@
 {id: 672, name: "Sky Cinema Select UK"},
 {id: 679, name: "Sky Cinema Thriller UK"},
 {id: 684, name: "Sky Comedy UK"},
-{id: 685, name: "Sky Crime"},
 {id: 686, name: "Sky History"},
 {id: 880, name: "Sky Serie Italy"},
 {id: 682, name: "Sky Showcase UK"},
@@ -495,7 +493,6 @@
 {id: 554, name: "Sky Sports Racing UK"},
 {id: 46, name: "Sky Sports Tennis UK"},
 {id: 361, name: "Sky Witness HD"},
-{id: 601, name: "Smithsonian Channel"},
 {id: 921, name: "Space City Home Network"},
 {id: 764, name: "Spectrum Sportsnet LA"},
 {id: 409, name: "Sportsnet 360"},
@@ -601,6 +598,9 @@
       // Now you can use the 'channels' variable in your code.
       populateChannelList();
  document.getElementById('updateStreams').addEventListener('click', updateStreams);
+ document.getElementById('clearStreams').addEventListener('click', clearStreams);
+ document.addEventListener('DOMContentLoaded', () => {
+  loadStreams();})
 async function loadSchedule() {
     try {
         const response = await fetch("https://api.allorigins.win/raw?url=https://daddylive.mp/schedule/schedule-generated.json");
@@ -627,7 +627,33 @@ async function loadSchedule() {
           container.appendChild(div);
         });
       }
+function saveStreams() {
+  const streams = [];
+  for (let i = 1; i <= 6; i++) {
+    streams.push(document.getElementById(`streamInput${i}`).value);
+  }
+  localStorage.setItem('savedStreams', JSON.stringify(streams));
+}
 
+// Load streams
+function loadStreams() {
+  const savedStreams = JSON.parse(localStorage.getItem('savedStreams')) || [];
+  savedStreams.forEach((streamId, index) => {
+    document.getElementById(`streamInput${index + 1}`).value = streamId;
+  });
+  if (savedStreams.length > 0) updateStreams();
+}
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey) {
+    if (e.key >= '1' && e.key <= '6') {
+      document.getElementById(`streamInput${e.key}`).focus();
+    } else if (e.key === 'Enter') {
+      updateStreams();
+    } else if (e.key === 'Backspace') {
+      clearStreams();
+    }
+  }
+});
       function fillEmptyStream(event) {
         const inputs = document.querySelectorAll("input[type='text']");
         for (let input of inputs) {
@@ -736,6 +762,21 @@ function fillEmptyStream(event) {
         console.error("Error updating streams:", e);
       }
     }
+    function clearStreams() {
+  // Clear all input fields
+  for(let i = 1; i <= 6; i++) {
+    document.getElementById(`streamInput${i}`).value = '';
+  }
+  
+  // Clear embedded streams
+  const streamsContainer = document.getElementById('streamsContainer');
+  streamsContainer.innerHTML = '';
+  
+  // Optional: Reset to default layout
+  streamsContainer.classList.remove('custom-layout');
+}
   </script>
+</body>
+</html>
 </body>
 </html>
