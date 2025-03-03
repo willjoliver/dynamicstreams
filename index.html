@@ -1,265 +1,279 @@
 <!DOCTYPE html>
 <html lang="en">
-   <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-      <title>Dynamic Stream Embed</title>
-      <style>
-         * {
-         margin: 0;
-         padding: 0;
-         box-sizing: border-box;
-         }
-         body, html {
-         width: 100%;
-         height: 100%;
-         font-family: sans-serif;
-         background: #121212;
-         color: white;
-         display: flex;
-         }
-         .top-controls {
-         display: flex;
-         flex-wrap: wrap;
-         gap: 10px;
-         align-items: center;
-         justify-content: space-between;
-         margin-bottom: 20px;
-         }
-         .channel-sidebar {
-         width: 250px;
-         height: 100vh;
-         background: #222;
-         color: white;
-         overflow-y: auto;
-         padding: 15px;
-         position: fixed;
-         right: -250px;
-         transition: right 0.3s;
-         }
-         .channel-sidebar.open {
-         right: 0;
-         }
-         .channel-sidebar h2 {
-         font-size: 18px;
-         text-align: center;
-         margin-bottom: 15px;
-         }
-         .channel-list {
-         display: flex;
-         flex-direction: column;
-         gap: 8px;
-         }
-         .channel-item {
-         padding: 10px;
-         background: #333;
-         border-radius: 5px;
-         cursor: pointer;
-         transition: background 0.2s;
-         }
-         .channel-item:hover {
-         background: #444;
-         }
-         .sidebar {
-         width: 300px;
-         height: 100vh;
-         background: #222;
-         color: white;
-         overflow-y: auto;
-         padding: 15px;
-         position: fixed;
-         left: -300px;
-         transition: left 0.3s;
-         }
-         .sidebar.open {
-         left: 0;
-         }
-         .sidebar h2 {
-         font-size: 18px;
-         text-align: center;
-         margin-bottom: 10px;
-         position: relative;
-         }
-         .close-sidebar {
-         position: absolute;
-         right: 15px;
-         top: 50%;
-         transform: translateY(-50%);
-         background: none;
-         border: none;
-         color: white;
-         font-size: 20px;
-         cursor: pointer;
-         padding: 5px;
-         }
-         .category-header {
-         cursor: pointer;
-         padding: 10px;
-         background: #333;
-         border-radius: 5px;
-         margin: 10px 0;
-         display: flex;
-         justify-content: space-between;
-         align-items: center;
-         }
-         .category-header:hover {
-         background: #3a3a3a;
-         }
-         .category-events {
-         overflow-y: hidden;
-         transition: max-height 0.3s ease-out;
-         max-height: 0;
-         }
-         .category-events:not(.collapsed) {
-         max-height: 80vh; /* Limits height to 80% of viewport */
-         overflow-y: auto;
-         padding-right: 5px; /* Space for scrollbar */
-         }
-         .category-events.collapsed {
-         max-height: 0;
-         }
-         .category-events::-webkit-scrollbar {
-         width: 8px;
-         }
-         .category-events::-webkit-scrollbar-track {
-         background: #333;
-         }
-         .category-events::-webkit-scrollbar-thumb {
-         background: #666;
-         border-radius: 4px;
-         }
-         .category-events::-webkit-scrollbar-thumb:hover {
-         background: #888;
-         }
-         .event {
-         margin-bottom: 10px;
-         padding: 10px;
-         background: #333;
-         border-radius: 5px;
-         }
-         .channel {
-         cursor: pointer;
-         padding: 5px;
-         background: #444;
-         border-radius: 3px;
-         margin-top: 5px;
-         text-align: center;
-         }
-         .channel:hover {
-         background: #555;
-         }
-         button {
-         padding: 10px 15px;
-         font-size: 16px;
-         background-color: #333;
-         color: #fff;
-         border: none;
-         border-radius: 5px;
-         cursor: pointer;
-         height: 40px;
-         }
-         button:hover {
-         background-color: #555;
-         }
-         input {
-         padding: 10px;
-         font-size: 16px;
-         background-color: #333;
-         color: #fff;
-         border: none;
-         border-radius: 5px;
-         height: 40px;
-         flex: 1;
-         min-width: 150px;
-         }
-         .main-content {
-         margin: 0 0;
-         width: 100%;
-         padding: 20px;
-         transition: margin 0.3s;
-         }
-         .sidebar.open ~ .main-content {
-         margin-left: 300px;
-         }
-         .channel-sidebar.open ~ .main-content {
-         margin-right: 250px;
-         }
-         .streams-grid {
-         display: grid;
-         margin-top: 20px;
-         /* Default layout for 3-4 streams */
-         grid-template-columns: repeat(2, 1fr);
-         }
-         .iframe-wrapper {
-         position: relative;
-         width: 100%;
-         padding-top: 56.25%;
-         background: #000;
-         border-radius: 8px;
-         overflow: hidden;
-         }
-         .iframe-wrapper iframe {
-         position: absolute;
-         top: 0;
-         left: 0;
-         width: 100%;
-         height: 100%;
-         border: none;
-         }
-         @media (min-width: 769px) {
-         /* Single stream - full width */
-         .streams-grid[data-stream-count="1"] {
-         grid-template-columns: 1fr;
-         }
-         /* Two streams - 2 columns */
-         .streams-grid[data-stream-count="2"] {
-         grid-template-columns: repeat(2, 1fr);
-         }
-         /* 5-6 streams - 3 columns */
-         .streams-grid[data-stream-count="5"],
-         .streams-grid[data-stream-count="6"] {
-         grid-template-columns: repeat(3, 1fr);
-         }
-         }
-         @media (max-width: 768px) {
-         .streams-grid {
-         grid-template-columns: 1fr;
-         }
-         }
-      </style>
-   </head>
-   <body>
-      <!-- Your HTML structure -->
-      <div id="sidebar" class="sidebar">
-         <h2>📅 Event Schedule
-            <button class="close-sidebar" onclick="toggleSidebar()">×</button>
-         </h2>
-         <div id="scheduleContainer">Loading...</div>
-      </div>
-      <div id="channelSidebar" class="channel-sidebar">
-         <h2>📺 Channel List</h2>
-         <div class="channel-list" id="channelList"></div>
-      </div>
-      <div class="main-content">
-         <div class="top-controls">
-            <button class="sidebar-toggle" onclick="toggleSidebar()">📅 Show Schedule</button>
-            <input type="text" id="streamInput1" placeholder="Stream 1">
-            <input type="text" id="streamInput2" placeholder="Stream 2">
-            <input type="text" id="streamInput3" placeholder="Stream 3">
-            <input type="text" id="streamInput4" placeholder="Stream 4">
-            <input type="text" id="streamInput5" placeholder="Stream 5">
-            <input type="text" id="streamInput6" placeholder="Stream 6">
-            <button id="updateStreams">Update Streams</button>
-            <button id="clearStreams">Clear Streams</button>
-            <button class="channel-toggle" onclick="toggleChannelSidebar()">📺 Channels</button>
-         </div>
-         <div id="streamsContainer" class="streams-grid"></div>
-      </div>
-      <!-- Insert channel data directly -->
-      <script>
-         // Fixed version of channels data (with commas between objects)
-         const channels = [
-         {id: 360, name: "5 USA"},
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dynamic Stream Embed</title>
+  <style>
+    /* Global resets and basic layout */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body, html {
+      width: 100%;
+      height: 100%;
+      font-family: sans-serif;
+      background: #121212;
+      color: white;
+      display: flex;
+    }
+    .top-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    /* Sidebar for schedule */
+    .sidebar {
+      width: 300px;
+      height: 100vh;
+      background: #222;
+      color: white;
+      overflow-y: auto;
+      padding: 15px;
+      position: fixed;
+      left: -300px;
+      transition: left 0.3s;
+    }
+    .sidebar.open {
+      left: 0;
+    }
+    .sidebar h2 {
+      font-size: 18px;
+      text-align: center;
+      margin-bottom: 10px;
+      position: relative;
+    }
+    .close-sidebar {
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 5px;
+    }
+    /* Sidebar for channels */
+    .channel-sidebar {
+      width: 250px;
+      height: 100vh;
+      background: #222;
+      color: white;
+      overflow-y: auto;
+      padding: 15px;
+      position: fixed;
+      right: -250px;
+      transition: right 0.3s;
+    }
+    .channel-sidebar.open {
+      right: 0;
+    }
+    .channel-sidebar h2 {
+      font-size: 18px;
+      text-align: center;
+      margin-bottom: 15px;
+    }
+    .channel-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .channel-item {
+      padding: 10px;
+      background: #333;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .channel-item:hover {
+      background: #444;
+    }
+    /* Category & event styling */
+    .category-header {
+      cursor: pointer;
+      padding: 10px;
+      background: #333;
+      border-radius: 5px;
+      margin: 10px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .category-header:hover {
+      background: #3a3a3a;
+    }
+    .category-events {
+      overflow-y: hidden;
+      transition: max-height 0.3s ease-out;
+      max-height: 0;
+    }
+    .category-events:not(.collapsed) {
+      max-height: 80vh; /* Limits height to 80% of viewport */
+      overflow-y: auto;
+      padding-right: 5px; /* Space for scrollbar */
+    }
+    .category-events.collapsed {
+      max-height: 0;
+    }
+    .category-events::-webkit-scrollbar {
+      width: 8px;
+    }
+    .category-events::-webkit-scrollbar-track {
+      background: #333;
+    }
+    .category-events::-webkit-scrollbar-thumb {
+      background: #666;
+      border-radius: 4px;
+    }
+    .category-events::-webkit-scrollbar-thumb:hover {
+      background: #888;
+    }
+    .event {
+      margin-bottom: 10px;
+      padding: 10px;
+      background: #333;
+      border-radius: 5px;
+    }
+    .channel {
+      cursor: pointer;
+      padding: 5px;
+      background: #444;
+      border-radius: 3px;
+      margin-top: 5px;
+      text-align: center;
+    }
+    .channel:hover {
+      background: #555;
+    }
+    button {
+      padding: 10px 15px;
+      font-size: 16px;
+      background-color: #333;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      height: 40px;
+    }
+    button:hover {
+      background-color: #555;
+    }
+    input {
+      padding: 10px;
+      font-size: 16px;
+      background-color: #333;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      height: 40px;
+      flex: 1;
+      min-width: 150px;
+    }
+    .main-content {
+      margin: 0;
+      width: 100%;
+      padding: 20px;
+      transition: margin 0.3s;
+    }
+    /* Adjust main content margins when sidebars are open */
+    .sidebar.open ~ .main-content {
+      margin-left: 300px;
+    }
+    .channel-sidebar.open ~ .main-content {
+      margin-right: 250px;
+    }
+    /* Streams grid layout */
+    .streams-grid {
+      display: grid;
+      margin-top: 20px;
+      grid-template-columns: repeat(2, 1fr);
+    }
+    @media (min-width: 769px) {
+      .streams-grid[data-stream-count="1"] {
+        grid-template-columns: 1fr;
+      }
+      .streams-grid[data-stream-count="2"] {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .streams-grid[data-stream-count="5"],
+      .streams-grid[data-stream-count="6"] {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+    @media (max-width: 768px) {
+      .streams-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    /* Schedule date header styling */
+    .schedule-date {
+      color: #fff;
+      padding: 15px;
+      background: #333;
+      border-radius: 5px;
+      margin: 20px 0;
+      text-align: center;
+    }
+    /* Iframe wrapper styling */
+    .iframe-wrapper {
+      position: relative;
+      width: 100%;
+      padding-top: 56.25%;
+      background: #000;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .iframe-wrapper iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- Schedule Sidebar -->
+  <div id="sidebar" class="sidebar">
+    <h2>📅 Event Schedule
+      <button class="close-sidebar" onclick="toggleSidebar()">×</button>
+    </h2>
+    <div id="scheduleContainer">Loading...</div>
+  </div>
+  <!-- Channel List Sidebar -->
+  <div id="channelSidebar" class="channel-sidebar">
+    <h2>📺 Channel List</h2>
+    <div class="channel-list" id="channelList"></div>
+  </div>
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="top-controls">
+      <button class="sidebar-toggle" onclick="toggleSidebar()">📅 Show Schedule</button>
+      <input type="text" id="streamInput1" placeholder="Stream 1">
+      <input type="text" id="streamInput2" placeholder="Stream 2">
+      <input type="text" id="streamInput3" placeholder="Stream 3">
+      <input type="text" id="streamInput4" placeholder="Stream 4">
+      <input type="text" id="streamInput5" placeholder="Stream 5">
+      <input type="text" id="streamInput6" placeholder="Stream 6">
+      <button id="updateStreams">Update Streams</button>
+      <button id="clearStreams">Clear Streams</button>
+      <button class="channel-toggle" onclick="toggleChannelSidebar()">📺 Channels</button>
+    </div>
+    <div id="streamsContainer" class="streams-grid"></div>
+  </div>
+  <!-- Channel Data -->
+  <script>
+    // Fixed version of channels data (with commas between objects)
+    const channels = [
+      {id: 360, name: "5 USA"},
          {id: 269, name: "A Sport PK"},
          {id: 302, name: "A&E USA"},
          {id: 51, name: "ABC USA"},
@@ -537,218 +551,228 @@
          {id: 517, name: "18+ (Player-17)"},
          {id: 518, name: "18+ (Player-18)"},
          {id: 519, name: "18+ (Player-19)"},
-         {id: 520, name: "18+ (Player-20)"}
-         ];
-      </script>
-      <script>
-         // Toggle functions for sidebars
-         function toggleSidebar() {
-           document.getElementById("sidebar").classList.toggle("open");
-         }
-         function toggleChannelSidebar() {
-           document.getElementById("channelSidebar").classList.toggle("open");
-         }
-         
-         document.addEventListener('DOMContentLoaded', function() {
-           // Now you can use the 'channels' variable in your code.
-           populateChannelList();
-             loadSchedule();
-         document.getElementById('updateStreams').addEventListener('click', updateStreams);
-         document.getElementById('clearStreams').addEventListener('click', clearStreams);
-         loadStreams();
-         async function loadSchedule() {
-         try {
-             const response = await fetch("https://api.allorigins.win/raw?url=https://daddylive.mp/schedule/schedule-generated.json");
-             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-             const scheduleData = await response.json();
-             displaySchedule(scheduleData);
-         } catch (error) {
-             console.error("Error loading schedule:", error);
-             document.getElementById("scheduleContainer").textContent = "Failed to load schedule";
-         }
-         }
-           function populateChannelList() {
-             const container = document.getElementById('channelList');
-             if (!channels) {
-               console.error("Channels data not loaded or is undefined");
-               return;
-             }
-             channels.forEach(channel => {
-               const div = document.createElement('div');
-               div.className = 'channel-item';
-               div.textContent = `${channel.id} ${channel.name}`;
-               div.dataset.channelId = channel.id;
-               div.addEventListener('click', fillEmptyStream);
-               container.appendChild(div);
-             });
-           }
-         function saveStreams() {
-         const streams = [];
-         for (let i = 1; i <= 6; i++) {
-         streams.push(document.getElementById(`streamInput${i}`).value);
-         }
-         localStorage.setItem('savedStreams', JSON.stringify(streams));
-         }
-         
-         // Load streams
-         function loadStreams() {
-         const savedStreams = JSON.parse(localStorage.getItem('savedStreams')) || [];
-         savedStreams.forEach((streamId, index) => {
-         document.getElementById(`streamInput${index + 1}`).value = streamId;
-         });
-         if (savedStreams.length > 0) updateStreams();
-         }
-         document.addEventListener('keydown', (e) => {
-         if (e.ctrlKey) {
-         if (e.key >= '1' && e.key <= '6') {
-           document.getElementById(`streamInput${e.key}`).focus();
-         } else if (e.key === 'Enter') {
-           updateStreams();
-         } else if (e.key === 'Backspace') {
-           clearStreams();
-         }
-         }
-         });
-           function fillEmptyStream(event) {
-             const inputs = document.querySelectorAll("input[type='text']");
-             for (let input of inputs) {
-               if (input.value.trim() === "") {
-                 input.value = event.target.dataset.channelId;
-                 break;
-               }
-             }
-           }
-         function displaySchedule(scheduleData) {
-           const container = document.getElementById("scheduleContainer");
-           container.innerHTML = "";
-         
-           try {
-             Object.keys(scheduleData).forEach(date => {
-               Object.entries(scheduleData[date]).forEach(([category, events]) => {
-                 // Add null checks for events
-               if (!events) return;
-               if (category.toLowerCase().includes('tennis')) return;
-         
-               // Filter out tennis events
-               const filteredEvents = events.filter(event => 
-               event.event && !event.event.toLowerCase().includes('tennis')
-               );
-         
-               if (filteredEvents.length === 0) return;
-         
-               const categoryContainer = document.createElement("div");
-               const categoryHeader = document.createElement("div");
-               const eventsContainer = document.createElement("div");
-               
-               categoryHeader.className = "category-header";
-               categoryHeader.innerHTML = `
-                 <span>${category}</span>
-                 <span>▶</span>
-               `;
-               
-               eventsContainer.className = "category-events collapsed";
-               
-               categoryHeader.addEventListener("click", () => {
-                 eventsContainer.classList.toggle("collapsed");
-                   if (!eventsContainer.classList.contains("collapsed")) {
-         categoryHeader.scrollIntoView({ behavior: "smooth", block: "nearest" });
-         }
-                 categoryHeader.querySelector("span:last-child").textContent = 
-                   eventsContainer.classList.contains("collapsed") ? "▶" : "▼";
-               });
-         
-               filteredEvents.forEach(event => {
-                 const eventDiv = document.createElement("div");
-                 eventDiv.className = "event";
-                 eventDiv.innerHTML = `<h3>${event.time} - ${event.event}</h3>`;
-                 
-                 event.channels.forEach(channel => {
-                   const channelDiv = document.createElement("div");
-                   channelDiv.className = "channel";
-                   channelDiv.textContent = channel.channel_name;
-                   channelDiv.dataset.channelId = channel.channel_id;
-                   channelDiv.addEventListener("click", fillEmptyStream);
-                   eventDiv.appendChild(channelDiv);
-                 });
-         
-                 eventsContainer.appendChild(eventDiv);
-               });
-         
-               categoryContainer.appendChild(categoryHeader);
-               categoryContainer.appendChild(eventsContainer);
-               container.appendChild(categoryContainer);
-             });
-           });
-                   } catch (e) {
-             console.error("Error displaying schedule:", e);
-             container.textContent = "Error displaying schedule data";
-           }
-         }
-         
-         function fillEmptyStream(event) {
-         let inputs = document.querySelectorAll("input[type='text']");
-         for (let input of inputs) {
-             if (input.value.trim() === "") {
-                 input.value = event.target.dataset.channelId;
-                 break; // Stop after filling the first empty field
-             }
-         }
-         }
-         });
-         
-         function updateStreams() {
-         try {
-         const streamsContainer = document.getElementById('streamsContainer');
-         streamsContainer.innerHTML = '';
-         
-         let streamCount = 0;
-         
-         for(let i = 1; i <= 6; i++) {
-           const streamId = document.getElementById(`streamInput${i}`).value.trim();
-           if(streamId) {
-             streamCount++;
-             const channel = channels.find(ch => ch.id == streamId);
-             const wrapper = document.createElement('div');
-             wrapper.className = 'iframe-wrapper';
-             
-             const streamUrl = channel?.customUrl || `https://daddylive.mp/embed/stream-${streamId}.php`;
-             
-             wrapper.innerHTML = `
-               <iframe src="${streamUrl}" 
-                       allowfullscreen></iframe>
-             `;
-             streamsContainer.appendChild(wrapper);
-           }
-         }
-         
-         // Set data attribute for CSS rules
-         streamsContainer.setAttribute('data-stream-count', streamCount);
-         
-         // Force mobile layout even if desktop width
-         const isMobile = window.matchMedia("(max-width: 768px)").matches;
-         if(isMobile) {
-           streamsContainer.style.gridTemplateColumns = '1fr';
-         } else {
-           streamsContainer.style.gridTemplateColumns = ''; // Reset to CSS rules
-         }
-         
-         } catch (e) {
-         console.error("Error updating streams:", e);
-         }
-         }
-         function clearStreams() {
-         // Clear all input fields
-         for(let i = 1; i <= 6; i++) {
-         document.getElementById(`streamInput${i}`).value = '';
-         }
-         
-         // Clear embedded streams
-         const streamsContainer = document.getElementById('streamsContainer');
-         streamsContainer.innerHTML = '';
-         
-         // Optional: Reset to default layout
-         streamsContainer.classList.remove('custom-layout');
-         }
-      </script>
-   </body>
+{id: 520, name: "18+ (Player-20)"}
+    ];
+  </script>
+  <!-- Main Script -->
+  <script>
+function convertGMTToLocal(timeString, dateString) {
+            try {
+                const cleanDateString = dateString.replace(/(\d+)(st|nd|rd|th)/, '$1');
+                const [dayName, day, month, year] = cleanDateString.split(/ |(?=\d{4})/);
+                const [hours, minutes] = timeString.split(':');
+                
+                // Create date in GMT timezone
+                const isoDate = new Date(`${month} ${day}, ${year} ${hours}:${minutes}:00 GMT`);
+                
+                return isoDate.toLocaleTimeString('en-US', {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                });
+            } catch (e) {
+                console.error('Time conversion error:', e);
+                return timeString;
+            }
+        }
+    
+    // Toggle the schedule sidebar
+    function toggleSidebar() {
+      document.getElementById("sidebar").classList.toggle("open");
+    }
+    
+    // Toggle the channel sidebar
+    function toggleChannelSidebar() {
+      document.getElementById("channelSidebar").classList.toggle("open");
+    }
+    
+    // Fills the first empty stream input with the selected channel ID.
+    function fillEmptyStream(event) {
+      const inputs = document.querySelectorAll("input[type='text']");
+      for (let input of inputs) {
+        if (input.value.trim() === "") {
+          input.value = event.target.dataset.channelId;
+          break; // Only fill the first empty field
+        }
+      }
+    }
+    
+    // Run when DOM is fully loaded.
+    document.addEventListener('DOMContentLoaded', function() {
+      populateChannelList();
+      loadSchedule();
+      document.getElementById('updateStreams').addEventListener('click', updateStreams);
+      document.getElementById('clearStreams').addEventListener('click', clearStreams);
+      loadStreams();
+      
+      // Load schedule data from the API and display it.
+      async function loadSchedule() {
+        try {
+          const response = await fetch("https://api.allorigins.win/raw?url=https://daddylive.mp/schedule/schedule-generated.json");
+          if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+          const scheduleData = await response.json();
+          displaySchedule(scheduleData);
+        } catch (error) {
+          console.error("Error loading schedule:", error);
+          document.getElementById("scheduleContainer").textContent = "Failed to load schedule";
+        }
+      }
+      
+      // Populate the channel list sidebar.
+      function populateChannelList() {
+        const container = document.getElementById('channelList');
+        if (!channels) {
+          console.error("Channels data not loaded or is undefined");
+          return;
+        }
+        channels.forEach(channel => {
+          const div = document.createElement('div');
+          div.className = 'channel-item';
+          div.textContent = `${channel.id} ${channel.name}`;
+          div.dataset.channelId = channel.id;
+          div.addEventListener('click', fillEmptyStream);
+          container.appendChild(div);
+        });
+      }
+      
+      // Save current stream inputs to localStorage.
+      function saveStreams() {
+        const streams = [];
+        for (let i = 1; i <= 6; i++) {
+          streams.push(document.getElementById(`streamInput${i}`).value);
+        }
+        localStorage.setItem('savedStreams', JSON.stringify(streams));
+      }
+      
+      // Load streams from localStorage.
+      function loadStreams() {
+        const savedStreams = JSON.parse(localStorage.getItem('savedStreams')) || [];
+        savedStreams.forEach((streamId, index) => {
+          document.getElementById(`streamInput${index + 1}`).value = streamId;
+        });
+        if (savedStreams.length > 0) updateStreams();
+      }
+      
+      // Keyboard shortcuts for stream inputs.
+      document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey) {
+          if (e.key >= '1' && e.key <= '6') {
+            document.getElementById(`streamInput${e.key}`).focus();
+          } else if (e.key === 'Enter') {
+            updateStreams();
+          } else if (e.key === 'Backspace') {
+            clearStreams();
+          }
+        }
+      });
+      
+      // Display the schedule using the fetched schedule data.
+      function displaySchedule(scheduleData) {
+        const container = document.getElementById("scheduleContainer");
+        container.innerHTML = "";
+        try {
+          // Loop through each date in the schedule.
+          Object.keys(scheduleData).forEach(date => {
+            // Create a date header only once per date.
+            const [fullDate] = date.split(" - ");
+            const [dayName, day, month, year] = fullDate.split(/\s+/);
+            const formattedDate = `${dayName} ${month} ${day}, ${year}`;
+            const dateDiv = document.createElement("h2");
+            dateDiv.className = "schedule-date";
+            dateDiv.textContent = formattedDate;
+            container.appendChild(dateDiv);
+            
+            // Loop through each category within the date.
+            Object.entries(scheduleData[date]).forEach(([category, events]) => {
+              if (!events) return;
+              if (category.toLowerCase().includes('tennis')) return;
+              // Filter out any tennis events.
+              const filteredEvents = events.filter(event =>
+                event.event && !event.event.toLowerCase().includes('tennis')
+              );
+              if (filteredEvents.length === 0) return;
+              
+              const categoryContainer = document.createElement("div");
+              const categoryHeader = document.createElement("div");
+              const eventsContainer = document.createElement("div");
+              
+              categoryHeader.className = "category-header";
+              categoryHeader.innerHTML = `<span>${category}</span><span>▶</span>`;
+              eventsContainer.className = "category-events collapsed";
+              
+              // Toggle event list on header click.
+              categoryHeader.addEventListener("click", () => {
+                eventsContainer.classList.toggle("collapsed");
+                if (!eventsContainer.classList.contains("collapsed")) {
+                  categoryHeader.scrollIntoView({ behavior: "smooth", block: "nearest" });
+                }
+                categoryHeader.querySelector("span:last-child").textContent =
+                  eventsContainer.classList.contains("collapsed") ? "▶" : "▼";
+              });
+              
+              filteredEvents.forEach(event => {
+                const eventDiv = document.createElement("div");
+                eventDiv.className = "event";
+                const localTime = convertGMTToLocal(event.time, fullDate);
+                eventDiv.innerHTML = `<h3>${localTime} - ${event.event}</h3>`;
+                event.channels.forEach(channel => {
+                  const channelDiv = document.createElement("div");
+                  channelDiv.className = "channel";
+                  channelDiv.textContent = channel.channel_name;
+                  channelDiv.dataset.channelId = channel.channel_id;
+                  channelDiv.addEventListener("click", fillEmptyStream);
+                  eventDiv.appendChild(channelDiv);
+                });
+                eventsContainer.appendChild(eventDiv);
+              });
+              
+              categoryContainer.appendChild(categoryHeader);
+              categoryContainer.appendChild(eventsContainer);
+              container.appendChild(categoryContainer);
+            });
+          });
+        } catch (e) {
+          console.error("Error displaying schedule:", e);
+          container.textContent = "Error displaying schedule data";
+        }
+      }
+    });
+    
+    // Update the streams grid with embedded streams based on input values.
+    function updateStreams() {
+      try {
+        const streamsContainer = document.getElementById('streamsContainer');
+        streamsContainer.innerHTML = '';
+        let streamCount = 0;
+        for (let i = 1; i <= 6; i++) {
+          const streamId = document.getElementById(`streamInput${i}`).value.trim();
+          if (streamId) {
+            streamCount++;
+            const channel = channels.find(ch => ch.id == streamId);
+            const wrapper = document.createElement('div');
+            wrapper.className = 'iframe-wrapper';
+            const streamUrl = channel && channel.customUrl ? channel.customUrl : `https://daddylive.mp/embed/stream-${streamId}.php`;
+            wrapper.innerHTML = `<iframe src="${streamUrl}" allowfullscreen></iframe>`;
+            streamsContainer.appendChild(wrapper);
+          }
+        }
+        streamsContainer.setAttribute('data-stream-count', streamCount);
+        const isMobile = window.matchMedia("(max-width: 768px)").matches;
+        streamsContainer.style.gridTemplateColumns = isMobile ? '1fr' : '';
+      } catch (e) {
+        console.error("Error updating streams:", e);
+      }
+    }
+    
+    // Clear all stream inputs and remove embedded streams.
+    function clearStreams() {
+      for (let i = 1; i <= 6; i++) {
+        document.getElementById(`streamInput${i}`).value = '';
+      }
+      const streamsContainer = document.getElementById('streamsContainer');
+      streamsContainer.innerHTML = '';
+      streamsContainer.classList.remove('custom-layout');
+    }
+  </script>
+</body>
 </html>
