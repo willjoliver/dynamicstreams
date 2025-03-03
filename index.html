@@ -210,12 +210,13 @@
     .channel-sidebar.open ~ .main-content {
       margin-right: 250px;
     }
-    .streams-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-      margin-top: 20px;
-    }
+.streams-grid {
+  display: grid;
+  margin-top: 20px;
+  /* Default layout for 3-4 streams */
+  grid-template-columns: repeat(2, 1fr);
+}
+
 
     .iframe-wrapper {
       position: relative;
@@ -235,11 +236,24 @@
       border: none;
     }
 
-    @media (max-width: 1200px) {
-      .streams-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
+@media (min-width: 769px) {
+  /* Single stream - full width */
+  .streams-grid[data-stream-count="1"] {
+    grid-template-columns: 1fr;
+  }
+  
+  /* Two streams - 2 columns */
+  .streams-grid[data-stream-count="2"] {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  /* 5-6 streams - 3 columns */
+  .streams-grid[data-stream-count="5"],
+  .streams-grid[data-stream-count="6"] {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 
     @media (max-width: 768px) {
       .streams-grid {
@@ -729,14 +743,16 @@ function updateStreams() {
     const streamsContainer = document.getElementById('streamsContainer');
     streamsContainer.innerHTML = '';
     
+    let streamCount = 0;
+    
     for(let i = 1; i <= 6; i++) {
       const streamId = document.getElementById(`streamInput${i}`).value.trim();
       if(streamId) {
+        streamCount++;
         const channel = channels.find(ch => ch.id == streamId);
         const wrapper = document.createElement('div');
         wrapper.className = 'iframe-wrapper';
         
-        // Use custom URL if available, otherwise default URL
         const streamUrl = channel?.customUrl || `https://daddylive.mp/embed/stream-${streamId}.php`;
         
         wrapper.innerHTML = `
@@ -746,6 +762,18 @@ function updateStreams() {
         streamsContainer.appendChild(wrapper);
       }
     }
+
+    // Set data attribute for CSS rules
+    streamsContainer.setAttribute('data-stream-count', streamCount);
+    
+    // Force mobile layout even if desktop width
+    const isMobile = window.matchMedia("(max-width: 768px)").matches;
+    if(isMobile) {
+      streamsContainer.style.gridTemplateColumns = '1fr';
+    } else {
+      streamsContainer.style.gridTemplateColumns = ''; // Reset to CSS rules
+    }
+
   } catch (e) {
     console.error("Error updating streams:", e);
   }
