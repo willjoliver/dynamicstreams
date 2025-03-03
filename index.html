@@ -635,24 +635,6 @@ function convertGMTToLocal(timeString, dateString) {
         });
       }
       
-      // Save current stream inputs to localStorage.
-      function saveStreams() {
-        const streams = [];
-        for (let i = 1; i <= 6; i++) {
-          streams.push(document.getElementById(`streamInput${i}`).value);
-        }
-        localStorage.setItem('savedStreams', JSON.stringify(streams));
-      }
-      
-      // Load streams from localStorage.
-      function loadStreams() {
-        const savedStreams = JSON.parse(localStorage.getItem('savedStreams')) || [];
-        savedStreams.forEach((streamId, index) => {
-          document.getElementById(`streamInput${index + 1}`).value = streamId;
-        });
-        if (savedStreams.length > 0) updateStreams();
-      }
-      
       // Keyboard shortcuts for stream inputs.
       document.addEventListener('keydown', (e) => {
         if (e.ctrlKey) {
