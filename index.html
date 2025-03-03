@@ -445,32 +445,7 @@
 {id: 210, name: "PBS USA USA"},
 {id: 450, name: "PTV Sports"},
 {id: 920, name: "Root Sports Northwest"},
-{id: 294, name: "Science Channel"},
 {id: 385, name: "SEC Network USA"},
-{id: 792, name: "Showtime 2 USA (SHO2) USA"},
-{id: 794, name: "Showtime Extreme USA"},
-{id: 795, name: "Showtime Family Zone (SHO Family Zone) USA"},
-{id: 796, name: "Showtime Next (SHO Next) USA"},
-{id: 793, name: "Showtime Showcase USA"},
-{id: 333, name: "Showtime USA"},
-{id: 797, name: "Showtime Women USA"},
-{id: 683, name: "Sky Arts UK"},
-{id: 362, name: "Sky Atlantic"},
-{id: 677, name: "Sky Cinema Action UK"},
-{id: 675, name: "Sky Cinema Animation UK"},
-{id: 678, name: "Sky Cinema Comedy UK"},
-{id: 680, name: "Sky Cinema Drama UK"},
-{id: 676, name: "Sky Cinema Family UK"},
-{id: 674, name: "Sky Cinema Greats UK"},
-{id: 673, name: "Sky Cinema Hits UK"},
-{id: 671, name: "Sky Cinema Premiere UK"},
-{id: 681, name: "Sky Cinema Sci-Fi Horror UK"},
-{id: 672, name: "Sky Cinema Select UK"},
-{id: 679, name: "Sky Cinema Thriller UK"},
-{id: 684, name: "Sky Comedy UK"},
-{id: 686, name: "Sky History"},
-{id: 880, name: "Sky Serie Italy"},
-{id: 682, name: "Sky Showcase UK"},
 {id: 588, name: "Sky Sport 1 NZ"},
 {id: 589, name: "Sky Sport 2 NZ"},
 {id: 590, name: "Sky Sport 3 NZ"},
@@ -493,6 +468,9 @@
 {id: 554, name: "Sky Sports Racing UK"},
 {id: 46, name: "Sky Sports Tennis UK"},
 {id: 361, name: "Sky Witness HD"},
+{id: 885, name: "SONY TEN 1 HD"},
+{id: 886, name: "SONY TEN 2 HD"},
+{id: 881, name: "SONY TEN 3 HD"},
 {id: 921, name: "Space City Home Network"},
 {id: 764, name: "Spectrum Sportsnet LA"},
 {id: 409, name: "Sportsnet 360"},
@@ -503,6 +481,11 @@
 {id: 922, name: "SportsNet Pittsburgh"},
 {id: 407, name: "Sportsnet West"},
 {id: 410, name: "Sportsnet World"},
+{
+  id: 'star1',
+  name: 'Star Sports 1 India',
+  customUrl: 'https://stream.crichd.sc/update/star.php'
+},
 {id: 335, name: "Starz"},
 {id: 284, name: "StarzPlay CricLife 1 HD"},
 {id: 283, name: "StarzPlay CricLife 2 HD"},
@@ -741,27 +724,32 @@ function fillEmptyStream(event) {
 }
     });
     
-        function updateStreams() {
-      try {
-      const streamsContainer = document.getElementById('streamsContainer');
-      streamsContainer.innerHTML = '';
-      
-      for(let i = 1; i <= 6; i++) {
-        const streamId = document.getElementById(`streamInput${i}`).value.trim();
-        if(streamId) {
-          const wrapper = document.createElement('div');
-          wrapper.className = 'iframe-wrapper';
-          wrapper.innerHTML = `
-            <iframe src="https://daddylive.mp/embed/stream-${streamId}.php" 
-                    allowfullscreen></iframe>
-          `;
-          streamsContainer.appendChild(wrapper);
-        }
-      }
-    }  catch (e) {
-        console.error("Error updating streams:", e);
+function updateStreams() {
+  try {
+    const streamsContainer = document.getElementById('streamsContainer');
+    streamsContainer.innerHTML = '';
+    
+    for(let i = 1; i <= 6; i++) {
+      const streamId = document.getElementById(`streamInput${i}`).value.trim();
+      if(streamId) {
+        const channel = channels.find(ch => ch.id == streamId);
+        const wrapper = document.createElement('div');
+        wrapper.className = 'iframe-wrapper';
+        
+        // Use custom URL if available, otherwise default URL
+        const streamUrl = channel?.customUrl || `https://daddylive.mp/embed/stream-${streamId}.php`;
+        
+        wrapper.innerHTML = `
+          <iframe src="${streamUrl}" 
+                  allowfullscreen></iframe>
+        `;
+        streamsContainer.appendChild(wrapper);
       }
     }
+  } catch (e) {
+    console.error("Error updating streams:", e);
+  }
+}
     function clearStreams() {
   // Clear all input fields
   for(let i = 1; i <= 6; i++) {
@@ -776,7 +764,5 @@ function fillEmptyStream(event) {
   streamsContainer.classList.remove('custom-layout');
 }
   </script>
-</body>
-</html>
 </body>
 </html>
