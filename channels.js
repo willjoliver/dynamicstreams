@@ -36,7 +36,6 @@ const channels = [
 {id: 600, name: "Abu Dhabi Sports 1 UAE"},
 {id: 610, name: "Abu Dhabi Sports 2 Premium"},
 {id: 601, name: "Abu Dhabi Sports 2 UAE"},
-{id: 666, name: "ACC Network USA"},
 {id: 664, name: "ACC Network USA"},
 {id: 295, name: "Adult Swim"},
 {id: 784, name: "Alkass Four"},
