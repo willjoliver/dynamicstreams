@@ -58,9 +58,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function loadSchedule() {
   try {
-    const response = await fetch("https://leafy-cuchufli-1eb8f9.netlify.app/.netlify/functions/schedule");
+    const response = await fetch("https://api.allorigins.hexocode.repl.co/get?disableCache=true&url=https://daddylive.mp/schedule/schedule-generated.json");
     if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-    const scheduleData = await response.json();
+    const data = await response.json();
+    // Check if the API wraps the JSON in a "contents" property
+    const scheduleData = data.contents ? JSON.parse(data.contents) : data;
     console.log("Schedule Data:", scheduleData);
     displaySchedule(scheduleData);
   } catch (error) {
