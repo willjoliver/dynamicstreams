@@ -62,6 +62,7 @@ async function loadSchedule() {
     const response = await fetch("https://api.allorigins.win/raw?url=https://daddylive.mp/schedule/schedule-generated.json");
     if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
     const scheduleData = await response.json();
+    console.log("Schedule Data:", scheduleData); // <-- Debug log
     displaySchedule(scheduleData);
   } catch (error) {
     console.error("Error loading schedule:", error);
