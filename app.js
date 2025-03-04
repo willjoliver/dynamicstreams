@@ -19,8 +19,8 @@ function toggleSidebar() {
   document.getElementById("sidebar").classList.toggle("open");
 }
     
-function toggleSidebar() {
-  document.getElementById("sidebar").classList.toggle("open");
+function toggleChannelSidebar() {
+  document.getElementById("channelSidebar").classList.toggle("open");
 }
     
 function fillEmptyStream(event) {
@@ -37,6 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('toggleSchedule').addEventListener('click', toggleSidebar);
   document.getElementById('closeSidebar').addEventListener('click', toggleSidebar);
   document.getElementById('toggleChannels').addEventListener('click', toggleChannelSidebar);
+  document.getElementById('closeChannels').addEventListener('click', toggleChannelSidebar);
   document.getElementById('updateStreams').addEventListener('click', updateStreams);
   document.getElementById('clearStreams').addEventListener('click', clearStreams);
   document.addEventListener('keydown', (e) => {
@@ -157,7 +158,7 @@ function updateStreams() {
         const streamUrl = channel && channel.customUrl 
                           ? channel.customUrl 
                           : `https://daddylive.mp/embed/stream-${streamId}.php`;
-        wrapper.innerHTML = `<iframe src="${streamUrl}" allowfullscreen></iframe>`;
+        wrapper.innerHTML = `<iframe src="${streamUrl}" loading="lazy" allowfullscreen></iframe>`;
         streamsContainer.appendChild(wrapper);
       }
     }
@@ -176,7 +177,4 @@ function clearStreams() {
   const streamsContainer = document.getElementById('streamsContainer');
   streamsContainer.innerHTML = '';
   streamsContainer.classList.remove('custom-layout');
-}
-
-function loadStreams() {
 }
