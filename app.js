@@ -34,7 +34,8 @@ function toggleChannelSidebar() {
 
 function fillEmptyStream(event) {
   // Ensure the clicked element is a channel
-  if (!event.target.classList.contains('channel')) return;
+  const channelElement = event.target.closest('.channel, .channel-item');
+  if (!channelElement) return;
 
   const inputs = document.querySelectorAll("input[type='text']");
   const channelId = event.target.dataset.channelId;
@@ -62,6 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('updateStreams').addEventListener('click', updateStreams);
   document.getElementById('clearStreams').addEventListener('click', clearStreams);
   document.getElementById('scheduleContainer').addEventListener('click', fillEmptyStream);
+  document.getElementById('channelList').addEventListener('click', fillEmptyStream);
 
   // Keyboard shortcuts
   document.addEventListener('keydown', (e) => {
@@ -100,16 +102,13 @@ async function loadSchedule() {
 // Populate the channel list sidebar
 function populateChannelList() {
   const container = document.getElementById('channelList');
-  if (!channels) {
-    console.error("Channels data not loaded or is undefined");
-    return;
-  }
+  if (!channels) return;
+
   channels.forEach(channel => {
     const div = document.createElement('div');
     div.className = 'channel-item';
     div.textContent = `${channel.id} ${channel.name}`;
-    div.dataset.channelId = channel.id;
-    div.addEventListener('click', fillEmptyStream);
+    div.dataset.channelId = channel.id; // Correct attribute
     container.appendChild(div);
   });
 }
