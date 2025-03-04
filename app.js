@@ -1,27 +1,23 @@
-// Convert GMT time to local time
 function convertGMTToLocal(timeString, dateString) {
   try {
-    // Clean up date string (remove ordinal suffixes and commas)
+    // Clean up date string (remove ordinal suffixes and " - Schedule Time UK GMT")
     const cleanDateString = dateString
-      .replace(/(\d+)(st|nd|rd|th)/, '$1')
-      .replace(/,/, '');
-    
-    // Split date into components
-    const [dayName, month, day, year] = cleanDateString.split(/\s+/);
-    
+      .replace(/(\d+)(st|nd|rd|th)/, '$1') // Remove ordinal suffixes
+      .replace(' - Schedule Time UK GMT', ''); // Remove trailing text
+
+    // Parse the date and time
+    const [dayName, day, month, year] = cleanDateString.split(/\s+/);
+    const [hours, minutes] = timeString.split(':');
+
     // Create a Date object in GMT
-    const isoDate = new Date(Date.UTC(
-      year,
-      new Date(Date.parse(`${month} 1, ${year}`)).getMonth(), // Get month index
-      day,
-      ...timeString.split(':').map(Number) // Split time into hours and minutes
-    ));
+    const isoDate = new Date(`${month} ${day}, ${year} ${hours}:${minutes}:00 GMT`);
 
     // Format as local time
     return isoDate.toLocaleTimeString('en-US', {
       hour: 'numeric',
       minute: '2-digit',
-      hour12: true
+      hour12: true,
+      timeZoneName: 'short' // Add time zone abbreviation (e.g., EST, PST)
     });
   } catch (e) {
     console.error('Time conversion error:', e);
@@ -39,11 +35,13 @@ function toggleChannelSidebar() {
   document.getElementById("channelSidebar").classList.toggle("open");
 }
 
-// Fill the first empty input with the clicked channel ID or URL
 function fillEmptyStream(event) {
+  // Ensure the clicked element is a channel
+  if (!event.target.classList.contains('channel')) return;
+
   const inputs = document.querySelectorAll("input[type='text']");
   const channelId = event.target.dataset.channelId;
-  const isAltFormat = event.target.dataset.altFormat === "true";
+  const isAltFormat = event.target.classList.contains('alt-channel');
 
   for (let input of inputs) {
     if (input.value.trim() === "") {
@@ -53,11 +51,11 @@ function fillEmptyStream(event) {
       } else {
         input.value = channelId; // Standard format
       }
+      input.focus(); // Focus the filled input
       break;
     }
   }
 }
-
 // Initialize event listeners
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('toggleSchedule').addEventListener('click', toggleSidebar);
@@ -66,6 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('closeChannels').addEventListener('click', toggleChannelSidebar);
   document.getElementById('updateStreams').addEventListener('click', updateStreams);
   document.getElementById('clearStreams').addEventListener('click', clearStreams);
+  document.getElementById('scheduleContainer').addEventListener('click', fillEmptyStream);
 
   // Keyboard shortcuts
   document.addEventListener('keydown', (e) => {
@@ -193,21 +192,18 @@ function displaySchedule(scheduleData) {
     container.textContent = "Error displaying schedule data";
   }
 }
-
-// Helper function to render channels
-function renderChannels(channels, channels2) {
-  // Ensure channels and channels2 are arrays
-  const mainChannels = Array.isArray(channels) ? channels.map(channel => `
+function renderChannels(channels = [], channels2 = []) {
+  const mainChannels = channels.map(channel => `
     <div class="channel" data-channel-id="${channel.channel_id}">
       ${channel.channel_name}
     </div>
-  `).join('') : '';
+  `).join('');
 
-  const altChannels = Array.isArray(channels2) ? channels2.map(channel => `
-    <div class="channel alt-channel" data-channel-id="${channel.channel_id}" data-alt-format="true">
+  const altChannels = channels2.map(channel => `
+    <div class="channel alt-channel" data-channel-id="${channel.channel_id}">
       ${channel.channel_name}
     </div>
-  `).join('') : '';
+  `).join('');
 
   return `
     <div class="channel-group">
