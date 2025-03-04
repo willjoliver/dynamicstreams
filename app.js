@@ -1,27 +1,24 @@
 function convertGMTToLocal(timeString, dateString) {
   try {
-    // Clean up date string (remove ordinal suffixes and " - Schedule Time UK GMT")
-    const cleanDateString = dateString
-      .replace(/(\d+)(st|nd|rd|th)/, '$1') // Remove ordinal suffixes
-      .replace(' - Schedule Time UK GMT', ''); // Remove trailing text
+    // Clean up date string
+    const cleanDate = dateString
+      .replace(' - Schedule Time UK GMT', '')
+      .replace(/(\d+)(st|nd|rd|th)/, '$1');
 
-    // Parse the date and time
-    const [dayName, day, month, year] = cleanDateString.split(/\s+/);
-    const [hours, minutes] = timeString.split(':');
+    // Parse as GMT date
+    const gmtDateString = `${cleanDate} ${timeString} GMT`;
+    const date = new Date(gmtDateString);
 
-    // Create a Date object in GMT
-    const isoDate = new Date(`${month} ${day}, ${year} ${hours}:${minutes}:00 GMT`);
-
-    // Format as local time
-    return isoDate.toLocaleTimeString('en-US', {
+    // Format with timezone
+    return date.toLocaleTimeString('en-US', {
       hour: 'numeric',
       minute: '2-digit',
       hour12: true,
-      timeZoneName: 'short' // Add time zone abbreviation (e.g., EST, PST)
+      timeZoneName: 'short'
     });
   } catch (e) {
     console.error('Time conversion error:', e);
-    return timeString; // Fallback to original time string
+    return timeString;
   }
 }
 
@@ -166,21 +163,23 @@ function displaySchedule(scheduleData) {
             eventsContainer.classList.contains("collapsed") ? "▶" : "▼";
         });
 
-        // Populate events
-        filteredEvents.forEach(event => {
-          console.log("Event Data:", event); // Debugging
-          const eventDiv = document.createElement("div");
-          eventDiv.className = "event";
-          const localTime = convertGMTToLocal(event.time, dateString);
+filteredEvents.forEach(event => {
+  console.log("Event Data:", event);
+  const eventDiv = document.createElement("div");
+  eventDiv.className = "event";
+  const localTime = convertGMTToLocal(event.time, dateString);
 
-          // Event details
-          eventDiv.innerHTML = `
-            <h3>${localTime} - ${event.event}</h3>
-            ${renderChannels(event.channels || [], event.channels2 || [])}
-          `;
+  // Ensure channels properties exist
+  const channels = Array.isArray(event.channels) ? event.channels : [];
+  const channels2 = Array.isArray(event.channels2) ? event.channels2 : [];
 
-          eventsContainer.appendChild(eventDiv);
-        });
+  eventDiv.innerHTML = `
+    <h3>${localTime} - ${event.event}</h3>
+    ${renderChannels(channels, channels2)}
+  `;
+
+  eventsContainer.appendChild(eventDiv);
+});
 
         categoryContainer.appendChild(categoryHeader);
         categoryContainer.appendChild(eventsContainer);
@@ -192,25 +191,34 @@ function displaySchedule(scheduleData) {
     container.textContent = "Error displaying schedule data";
   }
 }
-function renderChannels(channels = [], channels2 = []) {
-  const mainChannels = channels.map(channel => `
-    <div class="channel" data-channel-id="${channel.channel_id}">
-      ${channel.channel_name}
-    </div>
-  `).join('');
+function renderChannels(channels, channels2) {
+  try {
+    // Ensure channels are always arrays
+    const safeChannels = Array.isArray(channels) ? channels : [];
+    const safeChannels2 = Array.isArray(channels2) ? channels2 : [];
 
-  const altChannels = channels2.map(channel => `
-    <div class="channel alt-channel" data-channel-id="${channel.channel_id}">
-      ${channel.channel_name}
-    </div>
-  `).join('');
+    const mainChannels = safeChannels.map(channel => `
+      <div class="channel" data-channel-id="${channel.channel_id}">
+        ${channel.channel_name}
+      </div>
+    `).join('');
 
-  return `
-    <div class="channel-group">
-      ${mainChannels}
-      ${altChannels}
-    </div>
-  `;
+    const altChannels = safeChannels2.map(channel => `
+      <div class="channel alt-channel" data-channel-id="${channel.channel_id}">
+        ${channel.channel_name}
+      </div>
+    `).join('');
+
+    return `
+      <div class="channel-group">
+        ${mainChannels}
+        ${altChannels}
+      </div>
+    `;
+  } catch (e) {
+    console.error('Channel rendering error:', e);
+    return ''; // Return empty string if rendering fails
+  }
 }
 
 // Update the streams grid with embedded iframes
