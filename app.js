@@ -169,6 +169,7 @@ function displaySchedule(scheduleData) {
 
         // Populate events
         filteredEvents.forEach(event => {
+          console.log("Event Data:", event); // Debugging
           const eventDiv = document.createElement("div");
           eventDiv.className = "event";
           const localTime = convertGMTToLocal(event.time, dateString);
@@ -176,7 +177,7 @@ function displaySchedule(scheduleData) {
           // Event details
           eventDiv.innerHTML = `
             <h3>${localTime} - ${event.event}</h3>
-            ${renderChannels(event.channels, event.channels2)}
+            ${renderChannels(event.channels || [], event.channels2 || [])}
           `;
 
           eventsContainer.appendChild(eventDiv);
@@ -194,18 +195,19 @@ function displaySchedule(scheduleData) {
 }
 
 // Helper function to render channels
-function renderChannels(channels = [], channels2 = []) {
-  const mainChannels = channels.map(channel => `
+function renderChannels(channels, channels2) {
+  // Ensure channels and channels2 are arrays
+  const mainChannels = Array.isArray(channels) ? channels.map(channel => `
     <div class="channel" data-channel-id="${channel.channel_id}">
       ${channel.channel_name}
     </div>
-  `).join('');
+  `).join('') : '';
 
-  const altChannels = channels2.map(channel => `
+  const altChannels = Array.isArray(channels2) ? channels2.map(channel => `
     <div class="channel alt-channel" data-channel-id="${channel.channel_id}" data-alt-format="true">
       ${channel.channel_name}
     </div>
-  `).join('');
+  `).join('') : '';
 
   return `
     <div class="channel-group">
