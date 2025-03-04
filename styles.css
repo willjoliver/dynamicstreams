@@ -143,9 +143,32 @@
       margin-top: 5px;
       text-align: center;
     }
-    .channel:hover {
-      background: #555;
-    }
+.channel-group {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.channel {
+  padding: 5px 10px;
+  background: #444;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.channel:hover {
+  background: #555;
+}
+
+.alt-channel {
+  background: #666; /* Different color for channels2 */
+}
+
+.alt-channel:hover {
+  background: #777;
+}
     button {
       padding: 10px 15px;
       font-size: 16px;
