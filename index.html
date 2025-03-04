@@ -8,23 +8,23 @@
 </head>
 <body>
   <!-- Schedule Sidebar -->
-  <div id="sidebar" class="sidebar">
-    <h2>📅 Event Schedule
-      <button class="close-sidebar" onclick="toggleSidebar()">×</button>
-    </h2>
-    <div id="scheduleContainer">Loading...</div>
-  </div>
-  <!-- Channel List Sidebar -->
-  <div id="channelSidebar" class="channel-sidebar">
-    <h2>📺 Channel List
-    <button class="close-sidebar" onclick="toggleChannelSidebar()">×</button>
-    </h2>
-    <div class="channel-list" id="channelList"></div>
-  </div>
+<div id="sidebar" class="sidebar">
+  <h2>📅 Event Schedule
+    <button id="closeSidebar" class="close-sidebar">×</button>
+  </h2>
+  <div id="scheduleContainer">Loading...</div>
+</div>
+<!-- Channel List Sidebar -->
+<div id="channelSidebar" class="channel-sidebar">
+  <h2>📺 Channel List
+    <button id="closeChannels" class="close-sidebar">×</button>
+  </h2>
+  <div class="channel-list" id="channelList"></div>
+</div>
   <!-- Main Content -->
   <div class="main-content">
     <div class="top-controls">
-      <button class="sidebar-toggle" onclick="toggleSidebar()">📅 Show Schedule</button>
+      <button id="toggleSchedule" class="sidebar-toggle">📅 Show Schedule</button>
       <input type="text" id="streamInput1" placeholder="Stream 1">
       <input type="text" id="streamInput2" placeholder="Stream 2">
       <input type="text" id="streamInput3" placeholder="Stream 3">
@@ -33,7 +33,7 @@
       <input type="text" id="streamInput6" placeholder="Stream 6">
       <button id="updateStreams">Update Streams</button>
       <button id="clearStreams">Clear Streams</button>
-      <button class="channel-toggle" onclick="toggleChannelSidebar()">📺 Channels</button>
+      <button id="toggleChannels" class="channel-toggle">📺 Channels</button>
     </div>
     <div id="streamsContainer" class="streams-grid"></div>
   </div>
