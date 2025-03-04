@@ -71,23 +71,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function loadSchedule() {
   try {
-    // Updated proxy URL
-    const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-    const targetUrl = 'https://daddylive.mp/schedule/schedule-generated.json';
+    const response = await fetch('https://daddylive.mp/schedule/schedule-generated.json', {
+      mode: 'no-cors'
+    });
     
-    const response = await fetch(`${proxyUrl}${targetUrl}`);
     if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
     
     const scheduleData = await response.json();
-    console.log("Raw Schedule Data:", scheduleData);
+    console.log("Schedule Data:", scheduleData);
     displaySchedule(scheduleData);
   } catch (error) {
-    console.error("Full error:", error);
-    const errorDetails = `
-      Error: ${error.message}<br>
-      ${error.stack || ''}
-    `;
-    document.getElementById("scheduleContainer").innerHTML = errorDetails;
+    console.error("Error loading schedule:", error);
+    document.getElementById("scheduleContainer").textContent = "Failed to load schedule";
   }
 }
 
