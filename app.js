@@ -21,7 +21,62 @@ function convertGMTToLocal(timeString, dateString) {
     return timeString;
   }
 }
+// JavaScript Implementation
+let isCinematicMode = false;
+let mainStreamIndex = 0;
 
+document.getElementById('cinemaMode').addEventListener('click', () => {
+  const container = document.getElementById('streamsContainer');
+  isCinematicMode = !isCinematicMode;
+  
+  if(isCinematicMode) {
+    container.classList.add('cinematic-mode');
+    activateCinematicLayout();
+    this.classList.add('active-mode');
+    this.textContent = '⬜ Grid View';
+  } else {
+    container.classList.remove('cinematic-mode');
+    this.classList.remove('active-mode');
+    this.textContent = '🎬 Cinematic';
+  }
+});
+
+function activateCinematicLayout() {
+  const streams = Array.from(document.querySelectorAll('.iframe-wrapper'));
+  if(streams.length < 1) return;
+
+  // Create container structure
+  const mainStream = streams[0].cloneNode(true);
+  const rowWrapper = document.createElement('div');
+  rowWrapper.className = 'stream-row';
+
+  // Add remaining streams to row
+  streams.slice(1).forEach(stream => {
+    const clone = stream.cloneNode(true);
+    clone.addEventListener('click', promoteToMain);
+    rowWrapper.appendChild(clone);
+  });
+
+  // Clear and rebuild
+  streamsContainer.innerHTML = '';
+  mainStream.className = 'iframe-wrapper main-stream';
+  streamsContainer.appendChild(mainStream);
+  streamsContainer.appendChild(rowWrapper);
+}
+
+function promoteToMain(e) {
+  const currentMain = document.querySelector('.main-stream');
+  const newMain = e.currentTarget.cloneNode(true);
+  
+  // Swap positions
+  const rowWrapper = document.querySelector('.stream-row');
+  rowWrapper.insertBefore(currentMain, e.currentTarget);
+  e.currentTarget.replaceWith(newMain);
+  
+  newMain.className = 'iframe-wrapper main-stream';
+  currentMain.className = 'iframe-wrapper';
+  currentMain.addEventListener('click', promoteToMain);
+}
 // Toggle schedule sidebar
 function toggleSidebar() {
   document.getElementById("sidebar").classList.toggle("open");
