@@ -54,7 +54,6 @@ document.addEventListener('DOMContentLoaded', () => {
   
   populateChannelList();
   loadSchedule();
-  loadStreams();
 });
 
 async function loadSchedule() {
@@ -161,7 +160,7 @@ function updateStreams() {
         const streamUrl = channel && channel.customUrl 
                           ? channel.customUrl 
                           : `https://daddylive.mp/embed/stream-${streamId}.php`;
-        wrapper.innerHTML = `<iframe src="${streamUrl}" loading="lazy" allowfullscreen></iframe>`;
+        wrapper.innerHTML = `<iframe src="${streamUrl}" allowfullscreen></iframe>`;
         streamsContainer.appendChild(wrapper);
       }
     }
