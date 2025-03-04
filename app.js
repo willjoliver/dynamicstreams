@@ -1,9 +1,22 @@
 function convertGMTToLocal(timeString, dateString) {
   try {
-    const cleanDateString = dateString.replace(/(\d+)(st|nd|rd|th)/, '$1');
-    const [dayName, day, month, year] = cleanDateString.split(/ |(?=\d{4})/);
-    const [hours, minutes] = timeString.split(':');
-    const isoDate = new Date(`${month} ${day}, ${year} ${hours}:${minutes}:00 GMT`);
+    // Better date string cleanup
+    const cleanDateString = dateString
+      .replace(/(\d+)(st|nd|rd|th)/, '$1')
+      .replace(/,/, '');
+    
+    // More reliable date parsing
+    const dateParts = cleanDateString.split(/\s+/);
+    const [dayName, month, day, year] = dateParts;
+    
+    // Use UTC to avoid timezone issues
+    const isoDate = new Date(Date.UTC(
+      year,
+      new Date(Date.parse(month + " 1, " + year)).getMonth(),
+      day,
+      ...timeString.split(':').map(Number)
+    ));
+
     return isoDate.toLocaleTimeString('en-US', {
       hour: 'numeric',
       minute: '2-digit',
@@ -58,16 +71,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function loadSchedule() {
   try {
-    const response = await fetch("https://api.allorigins.hexocode.repl.co/get?disableCache=true&url=https://daddylive.mp/schedule/schedule-generated.json");
+    // Updated proxy URL
+    const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+    const targetUrl = 'https://daddylive.mp/schedule/schedule-generated.json';
+    
+    const response = await fetch(`${proxyUrl}${targetUrl}`);
     if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-    const data = await response.json();
-    // Check if the API wraps the JSON in a "contents" property
-    const scheduleData = data.contents ? JSON.parse(data.contents) : data;
-    console.log("Schedule Data:", scheduleData);
+    
+    const scheduleData = await response.json();
+    console.log("Raw Schedule Data:", scheduleData);
     displaySchedule(scheduleData);
   } catch (error) {
-    console.error("Error loading schedule:", error);
-    document.getElementById("scheduleContainer").textContent = "Failed to load schedule";
+    console.error("Full error:", error);
+    const errorDetails = `
+      Error: ${error.message}<br>
+      ${error.stack || ''}
+    `;
+    document.getElementById("scheduleContainer").innerHTML = errorDetails;
   }
 }
 
@@ -90,57 +110,67 @@ function populateChannelList() {
 function displaySchedule(scheduleData) {
   const container = document.getElementById("scheduleContainer");
   container.innerHTML = "";
+  
   try {
-    Object.keys(scheduleData).forEach(date => {
-      const [fullDate] = date.split(" - ");
-      const [dayName, day, month, year] = fullDate.split(/\s+/);
-      const formattedDate = `${dayName} ${month} ${day}, ${year}`;
-      const dateDiv = document.createElement("h2");
-      dateDiv.className = "schedule-date";
-      dateDiv.textContent = formattedDate;
-      container.appendChild(dateDiv);
-      Object.entries(scheduleData[date]).forEach(([category, events]) => {
-        if (!events || category.toLowerCase().includes('tennis')) return;
-        const filteredEvents = events.filter(event =>
-          event.event && !event.event.toLowerCase().includes('tennis')
-        );
-        if (filteredEvents.length === 0) return;
+    Object.entries(scheduleData).forEach(([dateString, categories]) => {
+      // Date header creation
+      const dateHeader = document.createElement("h2");
+      dateHeader.className = "schedule-date";
+      dateHeader.textContent = dateString;
+      container.appendChild(dateHeader);
+
+      Object.entries(categories).forEach(([categoryName, events]) => {
+        // Skip empty categories
+        if (!events?.length || categoryName.toLowerCase().includes('tennis')) return;
+
         const categoryContainer = document.createElement("div");
         const categoryHeader = document.createElement("div");
         const eventsContainer = document.createElement("div");
+
+        // Category header setup
         categoryHeader.className = "category-header";
-        categoryHeader.innerHTML = `<span>${category}</span><span>▶</span>`;
+        categoryHeader.innerHTML = `
+          <span>${categoryName}</span>
+          <span>▶</span>
+        `;
+
+        // Events container setup
         eventsContainer.className = "category-events collapsed";
+        
+        // Toggle functionality
         categoryHeader.addEventListener("click", () => {
           eventsContainer.classList.toggle("collapsed");
-          if (!eventsContainer.classList.contains("collapsed")) {
-            categoryHeader.scrollIntoView({ behavior: "smooth", block: "nearest" });
-          }
-          categoryHeader.querySelector("span:last-child").textContent =
+          categoryHeader.querySelector("span:last-child").textContent = 
             eventsContainer.classList.contains("collapsed") ? "▶" : "▼";
         });
-        filteredEvents.forEach(event => {
+
+        // Populate events
+        events.forEach(event => {
+          if (!event.event) return;
+          
           const eventDiv = document.createElement("div");
           eventDiv.className = "event";
-          const localTime = convertGMTToLocal(event.time, fullDate);
-          eventDiv.innerHTML = `<h3>${localTime} - ${event.event}</h3>`;
-          event.channels.forEach(channel => {
-            const channelDiv = document.createElement("div");
-            channelDiv.className = "channel";
-            channelDiv.textContent = channel.channel_name;
-            channelDiv.dataset.channelId = channel.channel_id;
-            channelDiv.addEventListener("click", fillEmptyStream);
-            eventDiv.appendChild(channelDiv);
-          });
+          const localTime = convertGMTToLocal(event.time, dateString);
+          
+          eventDiv.innerHTML = `
+            <h3>${localTime} - ${event.event}</h3>
+            ${(event.channels || []).map(channel => `
+              <div class="channel" data-channel-id="${channel.channel_id}">
+                ${channel.channel_name}
+              </div>
+            `).join('')}
+          `;
+
           eventsContainer.appendChild(eventDiv);
         });
+
         categoryContainer.appendChild(categoryHeader);
         categoryContainer.appendChild(eventsContainer);
         container.appendChild(categoryContainer);
       });
     });
   } catch (e) {
-    console.error("Error displaying schedule:", e);
+    console.error("Schedule display error:", e);
     container.textContent = "Error displaying schedule data";
   }
 }
