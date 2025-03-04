@@ -38,9 +38,17 @@ function toggleChannelSidebar() {
     
 function fillEmptyStream(event) {
   const inputs = document.querySelectorAll("input[type='text']");
+  const channelId = event.target.dataset.channelId;
+  const isAltFormat = event.target.dataset.altFormat === "true";
+
   for (let input of inputs) {
     if (input.value.trim() === "") {
-      input.value = event.target.dataset.channelId;
+      // Use alternate URL format for channels2
+      if (isAltFormat) {
+        input.value = `https://daddylive.mp/stream/bet.php?id=${channelId}`;
+      } else {
+        input.value = channelId; // Standard format
+      }
       break;
     }
   }
@@ -107,15 +115,19 @@ function displaySchedule(scheduleData) {
 
   try {
     Object.entries(scheduleData).forEach(([dateString, categories]) => {
-      // Create date header
+      // Clean up date string
+      const cleanDate = dateString.replace(' - Schedule Time UK GMT', '');
       const dateHeader = document.createElement("h2");
       dateHeader.className = "schedule-date";
-      dateHeader.textContent = dateString;
+      dateHeader.textContent = cleanDate;
       container.appendChild(dateHeader);
 
       Object.entries(categories).forEach(([categoryName, events]) => {
+        // Clean up category name
+        const cleanCategory = categoryName.replace('</span>', '');
+
         // Skip empty or tennis categories
-        if (!events || categoryName.toLowerCase().includes('tennis')) return;
+        if (!events || cleanCategory.toLowerCase().includes('tennis')) return;
 
         // Filter out invalid events
         const filteredEvents = events.filter(event => 
@@ -131,7 +143,7 @@ function displaySchedule(scheduleData) {
         // Category header setup
         categoryHeader.className = "category-header";
         categoryHeader.innerHTML = `
-          <span>${categoryName}</span>
+          <span>${cleanCategory}</span>
           <span>▶</span>
         `;
 
@@ -150,15 +162,11 @@ function displaySchedule(scheduleData) {
           const eventDiv = document.createElement("div");
           eventDiv.className = "event";
           const localTime = convertGMTToLocal(event.time, dateString);
-          
+
           // Event details
           eventDiv.innerHTML = `
             <h3>${localTime} - ${event.event}</h3>
-            ${(event.channels || []).map(channel => `
-              <div class="channel" data-channel-id="${channel.channel_id}">
-                ${channel.channel_name}
-              </div>
-            `).join('')}
+            ${renderChannels(event.channels, event.channels2)}
           `;
 
           eventsContainer.appendChild(eventDiv);
@@ -173,6 +181,28 @@ function displaySchedule(scheduleData) {
     console.error("Schedule display error:", e);
     container.textContent = "Error displaying schedule data";
   }
+}
+
+// Helper function to render channels
+function renderChannels(channels = [], channels2 = []) {
+  const mainChannels = channels.map(channel => `
+    <div class="channel" data-channel-id="${channel.channel_id}">
+      ${channel.channel_name}
+    </div>
+  `).join('');
+
+  const altChannels = channels2.map(channel => `
+    <div class="channel alt-channel" data-channel-id="${channel.channel_id}" data-alt-format="true">
+      ${channel.channel_name}
+    </div>
+  `).join('');
+
+  return `
+    <div class="channel-group">
+      ${mainChannels}
+      ${altChannels}
+    </div>
+  `;
 }
     
 function updateStreams() {
