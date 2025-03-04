@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
 async function loadSchedule() {
   try {
     const response = await fetch(
-      'https://raw.githubusercontent.com/your-username/your-repo/main/schedule.json'
+      'https://raw.githubusercontent.com/willjoliver/dynamicstreams/refs/heads/main/schedule.json'
     );
     if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
     
