@@ -59,10 +59,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function loadSchedule() {
   try {
-    const response = await fetch("https://api.allorigins.win/raw?url=https://daddylive.mp/schedule/schedule-generated.json");
+    const proxyUrl = "https://thingproxy.freeboard.io/fetch/";
+    const targetUrl = "https://daddylive.mp/schedule/schedule-generated.json";
+    const response = await fetch(proxyUrl + targetUrl);
     if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
     const scheduleData = await response.json();
-    console.log("Schedule Data:", scheduleData); // <-- Debug log
+    console.log("Schedule Data:", scheduleData);
     displaySchedule(scheduleData);
   } catch (error) {
     console.error("Error loading schedule:", error);
