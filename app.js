@@ -104,19 +104,26 @@ function populateChannelList() {
 function displaySchedule(scheduleData) {
   const container = document.getElementById("scheduleContainer");
   container.innerHTML = "";
-  
+
   try {
     Object.entries(scheduleData).forEach(([dateString, categories]) => {
-      // Date header creation
+      // Create date header
       const dateHeader = document.createElement("h2");
       dateHeader.className = "schedule-date";
       dateHeader.textContent = dateString;
       container.appendChild(dateHeader);
 
       Object.entries(categories).forEach(([categoryName, events]) => {
-        // Skip empty categories
-        if (!events?.length || categoryName.toLowerCase().includes('tennis')) return;
+        // Skip empty or tennis categories
+        if (!events || categoryName.toLowerCase().includes('tennis')) return;
 
+        // Filter out invalid events
+        const filteredEvents = events.filter(event => 
+          event.event && !event.event.toLowerCase().includes('tennis')
+        );
+        if (filteredEvents.length === 0) return;
+
+        // Create category container
         const categoryContainer = document.createElement("div");
         const categoryHeader = document.createElement("div");
         const eventsContainer = document.createElement("div");
@@ -130,7 +137,7 @@ function displaySchedule(scheduleData) {
 
         // Events container setup
         eventsContainer.className = "category-events collapsed";
-        
+
         // Toggle functionality
         categoryHeader.addEventListener("click", () => {
           eventsContainer.classList.toggle("collapsed");
@@ -139,13 +146,12 @@ function displaySchedule(scheduleData) {
         });
 
         // Populate events
-        events.forEach(event => {
-          if (!event.event) return;
-          
+        filteredEvents.forEach(event => {
           const eventDiv = document.createElement("div");
           eventDiv.className = "event";
           const localTime = convertGMTToLocal(event.time, dateString);
           
+          // Event details
           eventDiv.innerHTML = `
             <h3>${localTime} - ${event.event}</h3>
             ${(event.channels || []).map(channel => `
