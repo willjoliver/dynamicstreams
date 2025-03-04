@@ -71,10 +71,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function loadSchedule() {
   try {
-    const response = await fetch('https://daddylive.mp/schedule/schedule-generated.json', {
-      mode: 'no-cors'
-    });
-    
+    const response = await fetch(
+      'https://raw.githubusercontent.com/your-username/your-repo/main/schedule.json'
+    );
     if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
     
     const scheduleData = await response.json();
