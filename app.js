@@ -58,9 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function loadSchedule() {
   try {
-    const proxyUrl = "https://thingproxy.freeboard.io/fetch/";
-    const targetUrl = "https://daddylive.mp/schedule/schedule-generated.json";
-    const response = await fetch(proxyUrl + targetUrl);
+    const response = await fetch("https://leafy-cuchufli-1eb8f9.netlify.app/.netlify/functions/schedule");
     if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
     const scheduleData = await response.json();
     console.log("Schedule Data:", scheduleData);
