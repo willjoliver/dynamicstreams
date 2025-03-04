@@ -126,6 +126,26 @@
          {id: 330, name: "NICK"},
          {id: 334, name: "Paramount Network"},
          {id: 210, name: "PBS USA"},
+          {
+    id: "peacock",
+    name: "Peacock",
+    customUrl: "https://www.peacocktv.com"
+  },
+  {
+    id: "prime",
+    name: "Prime Video",
+    customUrl: "https://www.primevideo.com"
+  },
+  {
+    id: "max",
+    name: "Max (HBO Max)",
+    customUrl: "https://play.max.com"
+  },
+  {
+    id: "spectrum",
+    name: "Spectrum Live TV",
+    customUrl: "https://watch.spectrum.net/livetv"
+  },
          {id: 450, name: "PTV Sports"},
          {id: 920, name: "Root Sports Northwest"},
          {id: 385, name: "SEC Network USA"},
