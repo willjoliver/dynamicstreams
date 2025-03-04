@@ -1,22 +1,23 @@
+// Convert GMT time to local time
 function convertGMTToLocal(timeString, dateString) {
   try {
-    // Better date string cleanup
+    // Clean up date string (remove ordinal suffixes and commas)
     const cleanDateString = dateString
       .replace(/(\d+)(st|nd|rd|th)/, '$1')
       .replace(/,/, '');
     
-    // More reliable date parsing
-    const dateParts = cleanDateString.split(/\s+/);
-    const [dayName, month, day, year] = dateParts;
+    // Split date into components
+    const [dayName, month, day, year] = cleanDateString.split(/\s+/);
     
-    // Use UTC to avoid timezone issues
+    // Create a Date object in GMT
     const isoDate = new Date(Date.UTC(
       year,
-      new Date(Date.parse(month + " 1, " + year)).getMonth(),
+      new Date(Date.parse(`${month} 1, ${year}`)).getMonth(), // Get month index
       day,
-      ...timeString.split(':').map(Number)
+      ...timeString.split(':').map(Number) // Split time into hours and minutes
     ));
 
+    // Format as local time
     return isoDate.toLocaleTimeString('en-US', {
       hour: 'numeric',
       minute: '2-digit',
@@ -24,18 +25,21 @@ function convertGMTToLocal(timeString, dateString) {
     });
   } catch (e) {
     console.error('Time conversion error:', e);
-    return timeString;
+    return timeString; // Fallback to original time string
   }
 }
-    
+
+// Toggle schedule sidebar
 function toggleSidebar() {
   document.getElementById("sidebar").classList.toggle("open");
 }
-    
+
+// Toggle channel sidebar
 function toggleChannelSidebar() {
   document.getElementById("channelSidebar").classList.toggle("open");
 }
-    
+
+// Fill the first empty input with the clicked channel ID or URL
 function fillEmptyStream(event) {
   const inputs = document.querySelectorAll("input[type='text']");
   const channelId = event.target.dataset.channelId;
@@ -54,6 +58,7 @@ function fillEmptyStream(event) {
   }
 }
 
+// Initialize event listeners
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('toggleSchedule').addEventListener('click', toggleSidebar);
   document.getElementById('closeSidebar').addEventListener('click', toggleSidebar);
@@ -61,6 +66,8 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('closeChannels').addEventListener('click', toggleChannelSidebar);
   document.getElementById('updateStreams').addEventListener('click', updateStreams);
   document.getElementById('clearStreams').addEventListener('click', clearStreams);
+
+  // Keyboard shortcuts
   document.addEventListener('keydown', (e) => {
     if (e.ctrlKey) {
       if (e.key >= '1' && e.key <= '6') {
@@ -72,11 +79,12 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   });
-  
+
   populateChannelList();
   loadSchedule();
 });
 
+// Load schedule data from GitHub
 async function loadSchedule() {
   try {
     const response = await fetch(
@@ -93,6 +101,7 @@ async function loadSchedule() {
   }
 }
 
+// Populate the channel list sidebar
 function populateChannelList() {
   const container = document.getElementById('channelList');
   if (!channels) {
@@ -109,6 +118,7 @@ function populateChannelList() {
   });
 }
 
+// Display the schedule data
 function displaySchedule(scheduleData) {
   const container = document.getElementById("scheduleContainer");
   container.innerHTML = "";
@@ -204,26 +214,38 @@ function renderChannels(channels = [], channels2 = []) {
     </div>
   `;
 }
-    
+
+// Update the streams grid with embedded iframes
 function updateStreams() {
   try {
     const streamsContainer = document.getElementById('streamsContainer');
     streamsContainer.innerHTML = '';
     let streamCount = 0;
+
     for (let i = 1; i <= 6; i++) {
-      const streamId = document.getElementById(`streamInput${i}`).value.trim();
+      const input = document.getElementById(`streamInput${i}`);
+      const streamId = input.value.trim();
+
       if (streamId) {
         streamCount++;
         const channel = channels.find(ch => ch.id == streamId);
         const wrapper = document.createElement('div');
         wrapper.className = 'iframe-wrapper';
-        const streamUrl = channel && channel.customUrl 
-                          ? channel.customUrl 
-                          : `https://daddylive.mp/embed/stream-${streamId}.php`;
+
+        // Determine the stream URL
+        let streamUrl;
+        if (streamId.startsWith('https://')) {
+          streamUrl = streamId; // Use full URL for channels2
+        } else {
+          streamUrl = channel?.customUrl || `https://daddylive.mp/embed/stream-${streamId}.php`;
+        }
+
         wrapper.innerHTML = `<iframe src="${streamUrl}" allowfullscreen></iframe>`;
         streamsContainer.appendChild(wrapper);
       }
     }
+
+    // Update grid layout based on stream count
     streamsContainer.setAttribute('data-stream-count', streamCount);
     const isMobile = window.matchMedia("(max-width: 768px)").matches;
     streamsContainer.style.gridTemplateColumns = isMobile ? '1fr' : '';
@@ -231,7 +253,8 @@ function updateStreams() {
     console.error("Error updating streams:", e);
   }
 }
-    
+
+// Clear all stream inputs and iframes
 function clearStreams() {
   for (let i = 1; i <= 6; i++) {
     document.getElementById(`streamInput${i}`).value = '';
