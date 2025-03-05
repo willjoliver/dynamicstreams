@@ -131,13 +131,19 @@ function displaySchedule(scheduleData) {
         // Clean up category name
         const cleanCategory = categoryName.replace('</span>', '');
 
-        // Skip empty or tennis categories
-        if (!events || cleanCategory.toLowerCase().includes('tennis')) return;
+        // Define keywords for categories you want to filter out.
+        const disallowedKeywords = ['tennis', 'golf', 'snooker', 'biathlon', 'cross country', 'cycling', 'futsal', 'handball', 'horse racing', 'ski jumping', 'squash', 'volleyball', 'water polo', 'winter sports'];
 
-        // Filter out invalid events
+        // Skip the category if there are no events or if the category title contains any disallowed keyword.
+        if (!events || disallowedKeywords.some(keyword => cleanCategory.toLowerCase().includes(keyword))) {
+          return;
+        }
+
+        // Now, filter out individual events that contain any of the disallowed keywords.
         const filteredEvents = events.filter(event => 
-          event.event && !event.event.toLowerCase().includes('tennis')
+          event.event && !disallowedKeywords.some(keyword => event.event.toLowerCase().includes(keyword))
         );
+
         if (filteredEvents.length === 0) return;
 
         // Create category container
