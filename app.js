@@ -33,27 +33,22 @@ function toggleChannelSidebar() {
 }
 
 function fillEmptyStream(event) {
-  // Ensure the clicked element is a channel
+  // Ensure the clicked element is a channel or channel-item
   const channelElement = event.target.closest('.channel, .channel-item');
   if (!channelElement) return;
 
+  const channelId = channelElement.dataset.channelId;
   const inputs = document.querySelectorAll("input[type='text']");
-  const channelId = event.target.dataset.channelId;
-  const isAltFormat = event.target.classList.contains('alt-channel');
 
   for (let input of inputs) {
     if (input.value.trim() === "") {
-      // Use alternate URL format for channels2
-      if (isAltFormat) {
-        input.value = `https://daddylive.mp/stream/bet.php?id=${channelId}`;
-      } else {
-        input.value = channelId; // Standard format
-      }
+      input.value = channelId; // Set the standard channel ID
       input.focus(); // Focus the filled input
       break;
     }
   }
 }
+
 // Initialize event listeners
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('toggleSchedule').addEventListener('click', toggleSidebar);
@@ -176,11 +171,10 @@ filteredEvents.forEach(event => {
 
   // Ensure channels properties exist
   const channels = Array.isArray(event.channels) ? event.channels : [];
-  const channels2 = Array.isArray(event.channels2) ? event.channels2 : [];
 
   eventDiv.innerHTML = `
     <h3>${localTime} - ${event.event}</h3>
-    ${renderChannels(channels, channels2)}
+    ${renderChannels(channels)}
   `;
 
   eventsContainer.appendChild(eventDiv);
@@ -196,11 +190,10 @@ filteredEvents.forEach(event => {
     container.textContent = "Error displaying schedule data";
   }
 }
-function renderChannels(channels, channels2) {
+function renderChannels(channels) {
   try {
     // Ensure channels are always arrays
     const safeChannels = Array.isArray(channels) ? channels : [];
-    const safeChannels2 = Array.isArray(channels2) ? channels2 : [];
 
     const mainChannels = safeChannels.map(channel => `
       <div class="channel" data-channel-id="${channel.channel_id}">
@@ -208,16 +201,9 @@ function renderChannels(channels, channels2) {
       </div>
     `).join('');
 
-    const altChannels = safeChannels2.map(channel => `
-      <div class="channel alt-channel" data-channel-id="${channel.channel_id}">
-        ${channel.channel_name}
-      </div>
-    `).join('');
-
     return `
       <div class="channel-group">
         ${mainChannels}
-        ${altChannels}
       </div>
     `;
   } catch (e) {
@@ -246,7 +232,7 @@ function updateStreams() {
         // Determine the stream URL
         let streamUrl;
         if (streamId.startsWith('https://')) {
-          streamUrl = streamId; // Use full URL for channels2
+          streamUrl = streamId;
         } else {
           streamUrl = channel?.customUrl || `https://daddylive.mp/embed/stream-${streamId}.php`;
         }

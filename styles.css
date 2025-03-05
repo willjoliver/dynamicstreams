@@ -182,14 +182,6 @@ body, html {
   background: #555;
 }
 
-.alt-channel {
-  background: #666; /* Different color for channels2 */
-}
-
-.alt-channel:hover {
-  background: #777;
-}
-
 /* Button and input styling */
 button {
   padding: 10px 15px;
