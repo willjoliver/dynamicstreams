@@ -1,8 +1,8 @@
 name: Update Schedule
 on:
   schedule:
-    - cron: '0 0 * * *' # Runs daily at midnight
-  workflow_dispatch: # Allows manual triggering
+    - cron: '0 7 * * *'
+  workflow_dispatch:
 
 jobs:
   update:
