@@ -194,7 +194,9 @@ body, html {
   height: 40px;
   transition: background 0.2s, border-color 0.2s;
   appearance: none; /* Removes default dropdown styling */
+  margin-bottom: 15px; /* Add margin below the dropdown */
 }
+
 
 .sort-options select:hover {
   background-color: #444;
