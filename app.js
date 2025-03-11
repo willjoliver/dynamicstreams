@@ -136,7 +136,6 @@ function populateChannelList() {
     div.className = 'channel-item';
     div.textContent = `${channel.id} ${channel.name}`;
     div.dataset.channelId = channel.id;
-    div.addEventListener('click', fillEmptyStream);
     container.appendChild(div);
   });
 }
