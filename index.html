@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Dynamic Stream Embed</title>
+  <title>Dynamic Streams</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -19,6 +19,14 @@
   <h2>📺 Channels
     <button id="closeChannels" class="close-sidebar">×</button>
   </h2>
+  <!-- Sorting option -->
+  <div class="sort-options">
+    <label for="sortOrder">Sort by:</label>
+    <select id="sortOrder">
+      <option value="alpha">Alphabetical (A-Z)</option>
+      <option value="numeric">Numerical (1-9)</option>
+    </select>
+  </div>
   <div class="channel-list" id="channelList"></div>
 </div>
   <!-- Main Content -->

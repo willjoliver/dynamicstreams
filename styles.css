@@ -182,6 +182,14 @@ body, html {
   background: #555;
 }
 
+.sort-options {
+  margin-bottom: 10px;
+}
+
+.sort-options label {
+  margin-right: 5px;
+}
+
 /* Button and input styling */
 button {
   padding: 10px 15px;

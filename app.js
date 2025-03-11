@@ -82,7 +82,11 @@ document.addEventListener('keydown', (e) => {
     }
   }
 });
-
+  // When the sort option changes, repopulate the channel list.
+  const sortSelect = document.getElementById('sortOrder');
+  if (sortSelect) {
+    sortSelect.addEventListener('change', populateChannelList);
+  }
 
   populateChannelList();
   loadSchedule();
@@ -105,19 +109,38 @@ async function loadSchedule() {
   }
 }
 
-// Populate the channel list sidebar
+// Populate the channel list sidebar with sorting options.
 function populateChannelList() {
   const container = document.getElementById('channelList');
+  container.innerHTML = ''; // Clear previous content
   if (!channels) return;
 
-  channels.forEach(channel => {
+  // Get the sort order from the select element
+  const sortSelect = document.getElementById('sortOrder');
+  let sortedChannels = channels.slice(); // Create a shallow copy
+
+  if (sortSelect) {
+    const sortOrder = sortSelect.value;
+    if (sortOrder === 'alpha') {
+      // Sort alphabetically by channel name.
+      sortedChannels.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortOrder === 'numeric') {
+      // Sort numerically by channel id.
+      sortedChannels.sort((a, b) => Number(a.id) - Number(b.id));
+    }
+  }
+
+  // Render channels
+  sortedChannels.forEach(channel => {
     const div = document.createElement('div');
     div.className = 'channel-item';
     div.textContent = `${channel.id} ${channel.name}`;
-    div.dataset.channelId = channel.id; // Correct attribute
+    div.dataset.channelId = channel.id;
+    div.addEventListener('click', fillEmptyStream);
     container.appendChild(div);
   });
 }
+
 
 // Display the schedule data
 function displaySchedule(scheduleData) {
@@ -201,25 +224,19 @@ filteredEvents.forEach(event => {
     container.textContent = "Error displaying schedule data";
   }
 }
+
 function renderChannels(channels) {
   try {
-    // Ensure channels are always arrays
     const safeChannels = Array.isArray(channels) ? channels : [];
-
     const mainChannels = safeChannels.map(channel => `
       <div class="channel" data-channel-id="${channel.channel_id}">
         ${channel.channel_name}
       </div>
     `).join('');
-
-    return `
-      <div class="channel-group">
-        ${mainChannels}
-      </div>
-    `;
+    return `<div class="channel-group">${mainChannels}</div>`;
   } catch (e) {
     console.error('Channel rendering error:', e);
-    return ''; // Return empty string if rendering fails
+    return '';
   }
 }
 
