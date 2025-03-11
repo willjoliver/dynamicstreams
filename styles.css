@@ -182,12 +182,48 @@ body, html {
   background: #555;
 }
 
-.sort-options {
-  margin-bottom: 10px;
+.sort-options select {
+  padding: 10px;
+  font-size: 16px;
+  background-color: #333;
+  color: #fff;
+  border: 1px solid #444;
+  border-radius: 5px;
+  cursor: pointer;
+  outline: none;
+  height: 40px;
+  transition: background 0.2s, border-color 0.2s;
+  appearance: none; /* Removes default dropdown styling */
 }
 
-.sort-options label {
-  margin-right: 5px;
+.sort-options select:hover {
+  background-color: #444;
+  border-color: #555;
+}
+
+.sort-options select:focus {
+  background-color: #444;
+  border-color: #888;
+}
+
+/* Custom dropdown arrow */
+.sort-options {
+  position: relative;
+  display: inline-block;
+}
+
+.sort-options::after {
+  content: '▼';
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #aaa;
+}
+
+.sort-options select::-ms-expand {
+  display: none; /* Hides default dropdown arrow in IE/Edge */
 }
 
 /* Button and input styling */
