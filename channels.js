@@ -174,6 +174,7 @@
          {id: 112, name: "TSN 2"},
          {id: 113, name: "TSN 3"},
          {id: 114, name: "TSN 4"},
+        {id: 115, name: "TSN 5"},
          {id: 66, name: "TUDN USA"},
          {id: 342, name: "TVLAND"},
          {id: 133, name: "Unimas"},
