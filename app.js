@@ -61,17 +61,28 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('channelList').addEventListener('click', fillEmptyStream);
 
   // Keyboard shortcuts
-  document.addEventListener('keydown', (e) => {
-    if (e.ctrlKey) {
-      if (e.key >= '1' && e.key <= '6') {
-        document.getElementById(`streamInput${e.key}`).focus();
-      } else if (e.key === 'Enter') {
-        updateStreams();
-      } else if (e.key === 'Backspace') {
-        clearStreams();
-      }
+document.addEventListener('keydown', (e) => {
+  // If we're in an input field, trigger updateStreams on Enter.
+  if (e.target.tagName.toLowerCase() === 'input') {
+    if (e.key === 'Enter') {
+      updateStreams();
+      e.preventDefault();
+      return; // Prevent further processing
     }
-  });
+  }
+  
+  // Global shortcuts when the Command key (metaKey) is held (for Mac)
+  if (e.metaKey) {
+    if (e.key >= '1' && e.key <= '6') {
+      document.getElementById(`streamInput${e.key}`).focus();
+    } else if (e.key === 'Enter') {
+      updateStreams();
+    } else if (e.key === 'Backspace') {
+      clearStreams();
+    }
+  }
+});
+
 
   populateChannelList();
   loadSchedule();
