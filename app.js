@@ -240,7 +240,7 @@ function renderChannels(channels) {
 
 function isValidChannel(channelId) {
   const idNumber = parseInt(channelId, 10);
-  if (!isNaN(idNumber) {
+  if (!isNaN(idNumber)) {
     if (idNumber >= 501 && idNumber <= 520) {
       alert('This channel is blocked due to content restrictions');
       return false;
