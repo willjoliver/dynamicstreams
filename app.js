@@ -140,7 +140,6 @@ function populateChannelList() {
   });
 }
 
-
 // Display the schedule data
 function displaySchedule(scheduleData) {
   const container = document.getElementById("scheduleContainer");
@@ -239,7 +238,17 @@ function renderChannels(channels) {
   }
 }
 
-// Update the streams grid with embedded iframes
+function isValidChannel(channelId) {
+  const idNumber = parseInt(channelId, 10);
+  if (!isNaN(idNumber) {
+    if (idNumber >= 501 && idNumber <= 520) {
+      alert('This channel is blocked due to content restrictions');
+      return false;
+    }
+  }
+  return true;
+}
+
 function updateStreams() {
   try {
     const streamsContainer = document.getElementById('streamsContainer');
@@ -251,6 +260,11 @@ function updateStreams() {
       const streamId = input.value.trim();
 
       if (streamId) {
+        if (!isValidChannel(streamId)) {
+        input.value = ''; // Clear the blocked channel input
+        continue; // Skip to next iteration
+        }
+        
         streamCount++;
         const channel = channels.find(ch => ch.id == streamId);
         const wrapper = document.createElement('div');
