@@ -261,10 +261,10 @@ function updateStreams() {
 
       if (streamId) {
         if (!isValidChannel(streamId)) {
-        input.value = ''; // Clear the blocked channel input
-        continue; // Skip to next iteration
+          input.value = ''; // Clear the blocked channel input
+          continue; // Skip to next iteration
         }
-        
+
         streamCount++;
         const channel = channels.find(ch => ch.id == streamId);
         const wrapper = document.createElement('div');
@@ -278,7 +278,12 @@ function updateStreams() {
           streamUrl = channel?.customUrl || `https://daddylive.mp/embed/stream-${streamId}.php`;
         }
 
+        // Build the iframe
         wrapper.innerHTML = `<iframe src="${streamUrl}" allowfullscreen></iframe>`;
+
+        // Add click listener to highlight active stream
+        wrapper.addEventListener('click', setActiveStream);
+
         streamsContainer.appendChild(wrapper);
       }
     }
@@ -291,7 +296,34 @@ function updateStreams() {
     console.error("Error updating streams:", e);
   }
 }
+function setActiveStream(e) {
+  // Remove 'active-stream' from all existing wrappers
+  document.querySelectorAll('.iframe-wrapper').forEach(wrapper => {
+    wrapper.classList.remove('active-stream');
+  });
 
+  // Highlight the clicked wrapper
+  const clickedWrapper = e.currentTarget;
+  clickedWrapper.classList.add('active-stream');
+
+  // Optional: Attempt to mute other streams, unmute this one
+  muteAllStreamsExcept(clickedWrapper);
+}
+
+// This function is only useful if your streams support a mute/unmute API.
+function muteAllStreamsExcept(activeWrapper) {
+  const wrappers = document.querySelectorAll('.iframe-wrapper');
+  wrappers.forEach(wrapper => {
+    const iframe = wrapper.querySelector('iframe');
+    if (wrapper === activeWrapper) {
+      // Unmute if possible (depends on stream provider)
+      // Example: iframe.contentWindow.postMessage({ type: 'unmute' }, '*');
+    } else {
+      // Mute all other streams
+      // Example: iframe.contentWindow.postMessage({ type: 'mute' }, '*');
+    }
+  });
+}
 // Clear all stream inputs and iframes
 function clearStreams() {
   for (let i = 1; i <= 6; i++) {
