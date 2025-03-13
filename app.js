@@ -158,7 +158,7 @@ function displaySchedule(scheduleData) {
         const cleanCategory = categoryName.replace('</span>', '');
 
         // Define keywords for categories you want to filter out.
-        const disallowedKeywords = ['tennis', 'golf', 'snooker', 'biathlon', 'cross country', 'cycling', 'futsal', 'handball', 'horse racing', 'ski jumping', 'squash', 'volleyball', 'water polo', 'winter sports', 'athletics', 'aussie rules', 'darts', 'rugby league', 'rugby union', 'ice skating', 'alpine ski'];
+        const disallowedKeywords = ['tennis', 'golf', 'snooker', 'biathlon', 'cross country', 'cycling', 'futsal', 'handball', 'horse racing', 'ski jumping', 'squash', 'volleyball', 'water polo', 'waterpolo', 'winter sports', 'athletics', 'aussie rules', 'darts', 'rugby league', 'rugby union', 'ice skating', 'alpine ski'];
 
         // Skip the category if there are no events or if the category title contains any disallowed keyword.
         if (!events || disallowedKeywords.some(keyword => cleanCategory.toLowerCase().includes(keyword))) {
