@@ -165,7 +165,7 @@ const channels = [
     {id: 836, name: "Global CA"},
     {id: 838, name: "CTV 2 Canada"},
     {id: 845, name: "Universo"},
-    {id: 866, name: "CW Philadelphia"},
+    {id: 866, name: "Philly57"},
     {id: 881, name: "SONY TEN 3 HD"},
     {id: 885, name: "SONY TEN 1 HD"},
     {id: 886, name: "SONY TEN 2 HD"},
