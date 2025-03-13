@@ -101,7 +101,6 @@ async function loadSchedule() {
     if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
     
     const scheduleData = await response.json();
-    console.log("Schedule Data:", scheduleData);
     displaySchedule(scheduleData);
   } catch (error) {
     console.error("Error loading schedule:", error);
@@ -256,13 +255,13 @@ function updateStreams() {
     let streamCount = 0;
 
     for (let i = 1; i <= 6; i++) {
-      const input = document.getElementById(streamInput${i});
+      const input = document.getElementById(`streamInput${i}`);
       const streamId = input.value.trim();
 
       if (streamId) {
         if (!isValidChannel(streamId)) {
-        input.value = ''; // Clear the blocked channel input
-        continue; // Skip to next iteration
+          input.value = ''; // Clear the blocked channel input
+          continue; // Skip to next iteration
         }
         
         streamCount++;
@@ -275,10 +274,10 @@ function updateStreams() {
         if (streamId.startsWith('https://')) {
           streamUrl = streamId;
         } else {
-          streamUrl = channel?.customUrl || https://daddylive.mp/embed/stream-${streamId}.php;
+          streamUrl = channel?.customUrl || `https://daddylive.mp/embed/stream-${streamId}.php`;
         }
 
-        wrapper.innerHTML = <iframe src="${streamUrl}" allowfullscreen></iframe>;
+        wrapper.innerHTML = `<iframe src="${streamUrl}" allowfullscreen></iframe>`;
         streamsContainer.appendChild(wrapper);
       }
     }
@@ -286,7 +285,6 @@ function updateStreams() {
     // Update grid layout based on stream count
     streamsContainer.setAttribute('data-stream-count', streamCount);
     const isMobile = window.matchMedia("(max-width: 768px)").matches;
-    streamsContainer.style.gridTemplateColumns = isMobile ? '1fr' : '';
   } catch (e) {
     console.error("Error updating streams:", e);
   }
