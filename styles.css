@@ -333,7 +333,7 @@ input {
   position: relative;
   width: 100%;
   padding-top: 56.25%;
-  background: #333;
+  background: #121212;
   border-radius: 8px;
   overflow: hidden;
   transition: box-shadow 0.3s;
@@ -347,7 +347,6 @@ input {
   height: 100%;
   border: none;
 }
-
 
 .iframe-wrapper.active-stream {
   box-shadow: 0 0 10px 4px #aaa;
