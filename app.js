@@ -158,17 +158,25 @@ function displaySchedule(scheduleData) {
         const cleanCategory = categoryName.replace('</span>', '');
 
         // Define keywords for categories you want to filter out.
-        const disallowedKeywords = ['tennis', 'golf', 'snooker', 'biathlon', 'cross country', 'cycling', 'futsal', 'handball', 'horse racing', 'ski jumping', 'squash', 'volleyball', 'water polo', 'waterpolo', 'winter sports', 'athletics', 'aussie rules', 'darts', 'rugby league', 'rugby union', 'ice skating', 'alpine ski'];
+        const disallowedKeywords = ['tennis', 'golf', 'snooker', 'biathlon', 'cross country', 'cycling', 'futsal', 'handball', 'horse racing', 'ski jumping', 'squash', 'volleyball', 'water polo', 'waterpolo', 'winter sports', 'athletics', 'aussie rules', 'darts', 'rugby league', 'rugby union', 'ice skating', 'alpine ski', 'Sailing / Boating', 'Badminton', 'Weightlifting'];
 
         // Skip the category if there are no events or if the category title contains any disallowed keyword.
         if (!events || disallowedKeywords.some(keyword => cleanCategory.toLowerCase().includes(keyword))) {
           return;
         }
 
-        // Now, filter out individual events that contain any of the disallowed keywords.
-        const filteredEvents = events.filter(event => 
-          event.event && !disallowedKeywords.some(keyword => event.event.toLowerCase().includes(keyword))
-        );
+        // Filter and sort events
+        const filteredEvents = events
+          .filter(event => 
+            event.event && !disallowedKeywords.some(keyword => event.event.toLowerCase().includes(keyword))
+          )
+          // Add sorting here
+          .sort((a, b) => {
+            // Convert time strings to minutes since midnight for comparison
+            const [aHours, aMinutes] = a.time.split(':').map(Number);
+            const [bHours, bMinutes] = b.time.split(':').map(Number);
+            return (aHours * 60 + aMinutes) - (bHours * 60 + bMinutes);
+          });
 
         if (filteredEvents.length === 0) return;
 
