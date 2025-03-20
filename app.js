@@ -141,86 +141,91 @@ function populateChannelList() {
   });
 }
 
-// Display the schedule data
 function displaySchedule(scheduleData) {
   const container = document.getElementById("scheduleContainer");
   container.innerHTML = "";
 
   try {
-    Object.entries(scheduleData).forEach(([dateString, categories]) => {
-      // Clean up date string
+    // 1. Sort dates chronologically
+    const sortedDates = Object.entries(scheduleData).sort((a, b) => {
+      const dateA = new Date(a[0].replace(' - Schedule Time UK GMT', ''));
+      const dateB = new Date(b[0].replace(' - Schedule Time UK GMT', ''));
+      return dateA - dateB;
+    });
+
+    sortedDates.forEach(([dateString, categories]) => {
+      // 2. Clean date and create header
       const cleanDate = dateString.replace(' - Schedule Time UK GMT', '');
       const dateHeader = document.createElement("h2");
       dateHeader.className = "schedule-date";
       dateHeader.textContent = cleanDate;
       container.appendChild(dateHeader);
 
-      Object.entries(categories).forEach(([categoryName, events]) => {
-        // Clean up category name
+      // 3. Sort categories alphabetically
+      const sortedCategories = Object.entries(categories).sort((a, b) => 
+        a[0].localeCompare(b[0])
+      );
+
+      sortedCategories.forEach(([categoryName, events]) => {
+        // 4. Clean up category name and keywords
         const cleanCategory = categoryName.replace('</span>', '');
+        const disallowedKeywords = [
+          'tennis', 'golf', 'snooker', 'biathlon', 'cross country', 'cycling',
+          'futsal', 'handball', 'horse racing', 'ski jumping', 'squash',
+          'volleyball', 'water polo', 'winter sports', 'athletics', 'aussie rules',
+          'darts', 'rugby league', 'rugby union', 'ice skating', 'alpine ski',
+          'Sailing / Boating', 'Badminton', 'Weightlifting' // Removed duplicate
+        ];
 
-        // Define keywords for categories you want to filter out.
-        const disallowedKeywords = ['tennis', 'golf', 'snooker', 'biathlon', 'cross country', 'cycling', 'futsal', 'handball', 'horse racing', 'ski jumping', 'squash', 'volleyball', 'water polo', 'waterpolo', 'winter sports', 'athletics', 'aussie rules', 'darts', 'rugby league', 'rugby union', 'ice skating', 'alpine ski', 'Sailing / Boating', 'Badminton', 'Weightlifting'];
-
-        // Skip the category if there are no events or if the category title contains any disallowed keyword.
-        if (!events || disallowedKeywords.some(keyword => cleanCategory.toLowerCase().includes(keyword.toLowerCase()))) {
+        // 5. Skip disallowed categories
+        if (!events || disallowedKeywords.some(keyword => 
+          cleanCategory.toLowerCase().includes(keyword.toLowerCase()))
+        ) {
           return;
         }
 
-        // Filter and sort events by GMT time first
+        // 6. Sort events by actual datetime
         const filteredEvents = events
-          .filter(event => 
-            event.event && !disallowedKeywords.some(keyword => event.event.toLowerCase().includes(keyword.toLowerCase()))
+          .filter(event => event.event && 
+            !disallowedKeywords.some(keyword => 
+              event.event.toLowerCase().includes(keyword.toLowerCase()))
           )
           .sort((a, b) => {
             try {
-              // Create full GMT date objects for accurate sorting
               const aDate = new Date(`${cleanDate} ${a.time} GMT`);
               const bDate = new Date(`${cleanDate} ${b.time} GMT`);
               return aDate - bDate;
             } catch {
-              return 0; // Maintain original order if time parsing fails
+              return 0;
             }
           });
 
         if (filteredEvents.length === 0) return;
 
-        // Create category container
+        // 7. Create category elements
         const categoryContainer = document.createElement("div");
         const categoryHeader = document.createElement("div");
         const eventsContainer = document.createElement("div");
 
-        // Category header setup
         categoryHeader.className = "category-header";
-        categoryHeader.innerHTML = `
-          <span>${cleanCategory}</span>
-          <span>▶</span>
-        `;
-
-        // Events container setup
+        categoryHeader.innerHTML = `<span>${cleanCategory}</span><span>▶</span>`;
+        
         eventsContainer.className = "category-events collapsed";
-
-        // Toggle functionality
+        
         categoryHeader.addEventListener("click", () => {
           eventsContainer.classList.toggle("collapsed");
           categoryHeader.querySelector("span:last-child").textContent = 
             eventsContainer.classList.contains("collapsed") ? "▶" : "▼";
         });
 
+        // 8. Add sorted events
         filteredEvents.forEach(event => {
-          console.log("Event Data:", event);
           const eventDiv = document.createElement("div");
           eventDiv.className = "event";
-          const localTime = convertGMTToLocal(event.time, dateString);
-
-          // Ensure channels properties exist
-          const channels = Array.isArray(event.channels) ? event.channels : [];
-
           eventDiv.innerHTML = `
-            <h3>${localTime} - ${event.event}</h3>
-            ${renderChannels(channels)}
+            <h3>${convertGMTToLocal(event.time, dateString)} - ${event.event}</h3>
+            ${renderChannels(event.channels || [])}
           `;
-
           eventsContainer.appendChild(eventDiv);
         });
 
