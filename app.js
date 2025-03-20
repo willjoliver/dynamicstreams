@@ -62,27 +62,28 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('channelList').addEventListener('click', fillEmptyStream);
 
   // Keyboard shortcuts
-document.addEventListener('keydown', (e) => {
-  // If we're in an input field, trigger updateStreams on Enter.
-  if (e.target.tagName.toLowerCase() === 'input') {
-    if (e.key === 'Enter') {
-      updateStreams();
-      e.preventDefault();
-      return; // Prevent further processing
+  document.addEventListener('keydown', (e) => {
+    // If we're in an input field, trigger updateStreams on Enter.
+    if (e.target.tagName.toLowerCase() === 'input') {
+      if (e.key === 'Enter') {
+        updateStreams();
+        e.preventDefault();
+        return; // Prevent further processing
+      }
     }
-  }
-  
-  // Global shortcuts when the Command key (metaKey) is held (for Mac)
-  if (e.metaKey) {
-    if (e.key >= '1' && e.key <= '6') {
-      document.getElementById(`streamInput${e.key}`).focus();
-    } else if (e.key === 'Enter') {
-      updateStreams();
-    } else if (e.key === 'Backspace') {
-      clearStreams();
+    
+    // Global shortcuts when the Command key (metaKey) is held (for Mac)
+    if (e.metaKey) {
+      if (e.key >= '1' && e.key <= '6') {
+        document.getElementById(`streamInput${e.key}`).focus();
+      } else if (e.key === 'Enter') {
+        updateStreams();
+      } else if (e.key === 'Backspace') {
+        clearStreams();
+      }
     }
-  }
-});
+  });
+
   // When the sort option changes, repopulate the channel list.
   const sortSelect = document.getElementById('sortOrder');
   if (sortSelect) {
@@ -166,21 +167,21 @@ function displaySchedule(scheduleData) {
           return;
         }
 
-        // Filter and sort events
+        // Filter and sort events by GMT time first
         const filteredEvents = events
           .filter(event => 
             event.event && !disallowedKeywords.some(keyword => event.event.toLowerCase().includes(keyword.toLowerCase()))
           )
-          // Add sorting here
           .sort((a, b) => {
             try {
-              const [aHours, aMinutes] = a.time.split(':').map(Number);
-              const [bHours, bMinutes] = b.time.split(':').map(Number);
-              return (aHours * 60 + aMinutes) - (bHours * 60 + bMinutes);
+              // Create full GMT date objects for accurate sorting
+              const aDate = new Date(`${cleanDate} ${a.time} GMT`);
+              const bDate = new Date(`${cleanDate} ${b.time} GMT`);
+              return aDate - bDate;
             } catch {
               return 0; // Maintain original order if time parsing fails
-          }
-        });
+            }
+          });
 
         if (filteredEvents.length === 0) return;
 
@@ -206,22 +207,22 @@ function displaySchedule(scheduleData) {
             eventsContainer.classList.contains("collapsed") ? "▶" : "▼";
         });
 
-filteredEvents.forEach(event => {
-  console.log("Event Data:", event);
-  const eventDiv = document.createElement("div");
-  eventDiv.className = "event";
-  const localTime = convertGMTToLocal(event.time, dateString);
+        filteredEvents.forEach(event => {
+          console.log("Event Data:", event);
+          const eventDiv = document.createElement("div");
+          eventDiv.className = "event";
+          const localTime = convertGMTToLocal(event.time, dateString);
 
-  // Ensure channels properties exist
-  const channels = Array.isArray(event.channels) ? event.channels : [];
+          // Ensure channels properties exist
+          const channels = Array.isArray(event.channels) ? event.channels : [];
 
-  eventDiv.innerHTML = `
-    <h3>${localTime} - ${event.event}</h3>
-    ${renderChannels(channels)}
-  `;
+          eventDiv.innerHTML = `
+            <h3>${localTime} - ${event.event}</h3>
+            ${renderChannels(channels)}
+          `;
 
-  eventsContainer.appendChild(eventDiv);
-});
+          eventsContainer.appendChild(eventDiv);
+        });
 
         categoryContainer.appendChild(categoryHeader);
         categoryContainer.appendChild(eventsContainer);
