@@ -3,7 +3,8 @@ function convertGMTToLocal(timeString, dateString) {
     // Clean up date string
     const cleanDate = dateString
       .replace(' - Schedule Time UK GMT', '')
-      .replace(/(\d+)(st|nd|rd|th)/, '$1');
+      .replace(/(\d+)(?:st|nd|rd|th)/, '$1') // Better regex
+      .replace(/[^\w\s-]/g, '');
 
     // Parse as GMT date
     const gmtDateString = `${cleanDate} ${timeString} GMT`;
@@ -161,22 +162,25 @@ function displaySchedule(scheduleData) {
         const disallowedKeywords = ['tennis', 'golf', 'snooker', 'biathlon', 'cross country', 'cycling', 'futsal', 'handball', 'horse racing', 'ski jumping', 'squash', 'volleyball', 'water polo', 'waterpolo', 'winter sports', 'athletics', 'aussie rules', 'darts', 'rugby league', 'rugby union', 'ice skating', 'alpine ski', 'Sailing / Boating', 'Badminton', 'Weightlifting'];
 
         // Skip the category if there are no events or if the category title contains any disallowed keyword.
-        if (!events || disallowedKeywords.some(keyword => cleanCategory.toLowerCase().includes(keyword))) {
+        if (!events || disallowedKeywords.some(keyword => cleanCategory.toLowerCase().includes(keyword.toLowerCase()))) {
           return;
         }
 
         // Filter and sort events
         const filteredEvents = events
           .filter(event => 
-            event.event && !disallowedKeywords.some(keyword => event.event.toLowerCase().includes(keyword))
+            event.event && !disallowedKeywords.some(keyword => event.event.toLowerCase().includes(keyword.toLowerCase()))
           )
           // Add sorting here
           .sort((a, b) => {
-            // Convert time strings to minutes since midnight for comparison
-            const [aHours, aMinutes] = a.time.split(':').map(Number);
-            const [bHours, bMinutes] = b.time.split(':').map(Number);
-            return (aHours * 60 + aMinutes) - (bHours * 60 + bMinutes);
-          });
+            try {
+              const [aHours, aMinutes] = a.time.split(':').map(Number);
+              const [bHours, bMinutes] = b.time.split(':').map(Number);
+              return (aHours * 60 + aMinutes) - (bHours * 60 + bMinutes);
+            } catch {
+              return 0; // Maintain original order if time parsing fails
+          }
+        });
 
         if (filteredEvents.length === 0) return;
 
@@ -273,7 +277,7 @@ function updateStreams() {
         }
         
         streamCount++;
-        const channel = channels.find(ch => ch.id == streamId);
+        const channel = channels.find(ch => String(ch.id) === String(streamId));
         const wrapper = document.createElement('div');
         wrapper.className = 'iframe-wrapper';
 
