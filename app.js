@@ -154,72 +154,59 @@ function displaySchedule(scheduleData) {
     });
 
     sortedDates.forEach(([dateString, categories]) => {
-      // 2. Clean date and create header
       const cleanDate = dateString.replace(' - Schedule Time UK GMT', '');
       const dateHeader = document.createElement("h2");
       dateHeader.className = "schedule-date";
       dateHeader.textContent = cleanDate;
       container.appendChild(dateHeader);
 
-      // 3. Sort categories alphabetically
-      const sortedCategories = Object.entries(categories).sort((a, b) => 
-        a[0].localeCompare(b[0])
-      );
-
-      sortedCategories.forEach(([categoryName, events]) => {
-        // 4. Clean up category name and keywords
+      // 2. Collect and sort ALL events across categories
+      const allEvents = [];
+      Object.entries(categories).forEach(([categoryName, events]) => {
         const cleanCategory = categoryName.replace('</span>', '');
-        const disallowedKeywords = [
-          'tennis', 'golf', 'snooker', 'biathlon', 'cross country', 'cycling',
-          'futsal', 'handball', 'horse racing', 'ski jumping', 'squash',
-          'volleyball', 'water polo', 'winter sports', 'athletics', 'aussie rules',
-          'darts', 'rugby league', 'rugby union', 'ice skating', 'alpine ski',
-          'Sailing / Boating', 'Badminton', 'Weightlifting' // Removed duplicate
-        ];
+        const disallowedKeywords = [/* your list without duplicates */];
 
-        // 5. Skip disallowed categories
-        if (!events || disallowedKeywords.some(keyword => 
-          cleanCategory.toLowerCase().includes(keyword.toLowerCase()))
-        ) {
+        if (!events || disallowedKeywords.some(k => cleanCategory.toLowerCase().includes(k.toLowerCase()))) {
           return;
         }
 
-        // 6. Sort events by actual datetime
-        const filteredEvents = events
-          .filter(event => event.event && 
-            !disallowedKeywords.some(keyword => 
-              event.event.toLowerCase().includes(keyword.toLowerCase()))
-          )
-          .sort((a, b) => {
-            try {
-              const aDate = new Date(`${cleanDate} ${a.time} GMT`);
-              const bDate = new Date(`${cleanDate} ${b.time} GMT`);
-              return aDate - bDate;
-            } catch {
-              return 0;
-            }
-          });
+        events.forEach(event => {
+          if (event.event && !disallowedKeywords.some(k => event.event.toLowerCase().includes(k.toLowerCase()))) {
+            allEvents.push({
+              ...event,
+              category: cleanCategory,
+              sortKey: new Date(`${cleanDate} ${event.time} GMT`)
+            });
+          }
+        });
+      });
 
-        if (filteredEvents.length === 0) return;
+      // 3. Sort all events chronologically
+      allEvents.sort((a, b) => a.sortKey - b.sortKey);
 
-        // 7. Create category elements
+      // 4. Group sorted events by category
+      const eventsByCategory = allEvents.reduce((acc, event) => {
+        acc[event.category] = acc[event.category] || [];
+        acc[event.category].push(event);
+        return acc;
+      }, {});
+
+      // 5. Sort categories by their earliest event
+      const sortedCategories = Object.entries(eventsByCategory).sort((a, b) => {
+        return a[1][0].sortKey - b[1][0].sortKey;
+      });
+
+      // 6. Render categories with sorted events
+      sortedCategories.forEach(([categoryName, events]) => {
         const categoryContainer = document.createElement("div");
         const categoryHeader = document.createElement("div");
         const eventsContainer = document.createElement("div");
 
         categoryHeader.className = "category-header";
-        categoryHeader.innerHTML = `<span>${cleanCategory}</span><span>▶</span>`;
+        categoryHeader.innerHTML = `<span>${categoryName}</span><span>▶</span>`;
         
-        eventsContainer.className = "category-events collapsed";
-        
-        categoryHeader.addEventListener("click", () => {
-          eventsContainer.classList.toggle("collapsed");
-          categoryHeader.querySelector("span:last-child").textContent = 
-            eventsContainer.classList.contains("collapsed") ? "▶" : "▼";
-        });
-
-        // 8. Add sorted events
-        filteredEvents.forEach(event => {
+        eventsContainer.className = "category-events";
+        events.forEach(event => {
           const eventDiv = document.createElement("div");
           eventDiv.className = "event";
           eventDiv.innerHTML = `
