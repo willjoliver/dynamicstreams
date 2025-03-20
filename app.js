@@ -3,8 +3,7 @@ function convertGMTToLocal(timeString, dateString) {
     // Clean up date string
     const cleanDate = dateString
       .replace(' - Schedule Time UK GMT', '')
-      .replace(/(\d+)(?:st|nd|rd|th)/, '$1') // Better regex
-      .replace(/[^\w\s-]/g, '');
+      .replace(/(\d+)(st|nd|rd|th)/, '$1');
 
     // Parse as GMT date
     const gmtDateString = `${cleanDate} ${timeString} GMT`;
@@ -62,28 +61,27 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('channelList').addEventListener('click', fillEmptyStream);
 
   // Keyboard shortcuts
-  document.addEventListener('keydown', (e) => {
-    // If we're in an input field, trigger updateStreams on Enter.
-    if (e.target.tagName.toLowerCase() === 'input') {
-      if (e.key === 'Enter') {
-        updateStreams();
-        e.preventDefault();
-        return; // Prevent further processing
-      }
+document.addEventListener('keydown', (e) => {
+  // If we're in an input field, trigger updateStreams on Enter.
+  if (e.target.tagName.toLowerCase() === 'input') {
+    if (e.key === 'Enter') {
+      updateStreams();
+      e.preventDefault();
+      return; // Prevent further processing
     }
-    
-    // Global shortcuts when the Command key (metaKey) is held (for Mac)
-    if (e.metaKey) {
-      if (e.key >= '1' && e.key <= '6') {
-        document.getElementById(`streamInput${e.key}`).focus();
-      } else if (e.key === 'Enter') {
-        updateStreams();
-      } else if (e.key === 'Backspace') {
-        clearStreams();
-      }
+  }
+  
+  // Global shortcuts when the Command key (metaKey) is held (for Mac)
+  if (e.metaKey) {
+    if (e.key >= '1' && e.key <= '6') {
+      document.getElementById(`streamInput${e.key}`).focus();
+    } else if (e.key === 'Enter') {
+      updateStreams();
+    } else if (e.key === 'Backspace') {
+      clearStreams();
     }
-  });
-
+  }
+});
   // When the sort option changes, repopulate the channel list.
   const sortSelect = document.getElementById('sortOrder');
   if (sortSelect) {
@@ -141,80 +139,77 @@ function populateChannelList() {
   });
 }
 
+// Display the schedule data
 function displaySchedule(scheduleData) {
   const container = document.getElementById("scheduleContainer");
   container.innerHTML = "";
 
   try {
-    // 1. Sort dates chronologically
-    const sortedDates = Object.entries(scheduleData).sort((a, b) => {
-      const dateA = new Date(a[0].replace(' - Schedule Time UK GMT', ''));
-      const dateB = new Date(b[0].replace(' - Schedule Time UK GMT', ''));
-      return dateA - dateB;
-    });
-
-    sortedDates.forEach(([dateString, categories]) => {
+    Object.entries(scheduleData).forEach(([dateString, categories]) => {
+      // Clean up date string
       const cleanDate = dateString.replace(' - Schedule Time UK GMT', '');
       const dateHeader = document.createElement("h2");
       dateHeader.className = "schedule-date";
       dateHeader.textContent = cleanDate;
       container.appendChild(dateHeader);
 
-      // 2. Collect and sort ALL events across categories
-      const allEvents = [];
       Object.entries(categories).forEach(([categoryName, events]) => {
+        // Clean up category name
         const cleanCategory = categoryName.replace('</span>', '');
-        const disallowedKeywords = [/* your list without duplicates */];
 
-        if (!events || disallowedKeywords.some(k => cleanCategory.toLowerCase().includes(k.toLowerCase()))) {
+        // Define keywords for categories you want to filter out.
+        const disallowedKeywords = ['tennis', 'golf', 'snooker', 'biathlon', 'cross country', 'cycling', 'futsal', 'handball', 'horse racing', 'ski jumping', 'squash', 'volleyball', 'water polo', 'waterpolo', 'winter sports', 'athletics', 'aussie rules', 'darts', 'rugby league', 'rugby union', 'ice skating', 'alpine ski'];
+
+        // Skip the category if there are no events or if the category title contains any disallowed keyword.
+        if (!events || disallowedKeywords.some(keyword => cleanCategory.toLowerCase().includes(keyword))) {
           return;
         }
 
-        events.forEach(event => {
-          if (event.event && !disallowedKeywords.some(k => event.event.toLowerCase().includes(k.toLowerCase()))) {
-            allEvents.push({
-              ...event,
-              category: cleanCategory,
-              sortKey: new Date(`${cleanDate} ${event.time} GMT`)
-            });
-          }
-        });
-      });
+        // Now, filter out individual events that contain any of the disallowed keywords.
+        const filteredEvents = events.filter(event => 
+          event.event && !disallowedKeywords.some(keyword => event.event.toLowerCase().includes(keyword))
+        );
 
-      // 3. Sort all events chronologically
-      allEvents.sort((a, b) => a.sortKey - b.sortKey);
+        if (filteredEvents.length === 0) return;
 
-      // 4. Group sorted events by category
-      const eventsByCategory = allEvents.reduce((acc, event) => {
-        acc[event.category] = acc[event.category] || [];
-        acc[event.category].push(event);
-        return acc;
-      }, {});
-
-      // 5. Sort categories by their earliest event
-      const sortedCategories = Object.entries(eventsByCategory).sort((a, b) => {
-        return a[1][0].sortKey - b[1][0].sortKey;
-      });
-
-      // 6. Render categories with sorted events
-      sortedCategories.forEach(([categoryName, events]) => {
+        // Create category container
         const categoryContainer = document.createElement("div");
         const categoryHeader = document.createElement("div");
         const eventsContainer = document.createElement("div");
 
+        // Category header setup
         categoryHeader.className = "category-header";
-        categoryHeader.innerHTML = `<span>${categoryName}</span><span>▶</span>`;
-        
-        eventsContainer.className = "category-events";
-        events.forEach(event => {
-          const eventDiv = document.createElement("div");
-          eventDiv.className = "event";
-          eventDiv.innerHTML = `
-            <h3>${convertGMTToLocal(event.time, dateString)} - ${event.event}</h3>
-            ${renderChannels(event.channels || [])}
-          `;
-          eventsContainer.appendChild(eventDiv);
+        categoryHeader.innerHTML = `
+          <span>${cleanCategory}</span>
+          <span>▶</span>
+        `;
+
+        // Events container setup
+        eventsContainer.className = "category-events collapsed";
+
+        // Toggle functionality
+        categoryHeader.addEventListener("click", () => {
+          eventsContainer.classList.toggle("collapsed");
+          categoryHeader.querySelector("span:last-child").textContent = 
+            eventsContainer.classList.contains("collapsed") ? "▶" : "▼";
         });
+
+filteredEvents.forEach(event => {
+  console.log("Event Data:", event);
+  const eventDiv = document.createElement("div");
+  eventDiv.className = "event";
+  const localTime = convertGMTToLocal(event.time, dateString);
+
+  // Ensure channels properties exist
+  const channels = Array.isArray(event.channels) ? event.channels : [];
+
+  eventDiv.innerHTML = `
+    <h3>${localTime} - ${event.event}</h3>
+    ${renderChannels(channels)}
+  `;
+
+  eventsContainer.appendChild(eventDiv);
+});
 
         categoryContainer.appendChild(categoryHeader);
         categoryContainer.appendChild(eventsContainer);
@@ -270,7 +265,7 @@ function updateStreams() {
         }
         
         streamCount++;
-        const channel = channels.find(ch => String(ch.id) === String(streamId));
+        const channel = channels.find(ch => ch.id == streamId);
         const wrapper = document.createElement('div');
         wrapper.className = 'iframe-wrapper';
 
