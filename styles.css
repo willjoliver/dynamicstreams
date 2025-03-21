@@ -277,7 +277,7 @@ input {
 .streams-grid {
   display: grid;
   margin-top: 20px;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 20px; /* Added gap between grid items */
 }
 
@@ -288,9 +288,19 @@ input {
   .streams-grid[data-stream-count="2"] {
     grid-template-columns: repeat(2, 1fr);
   }
+  .streams-grid[data-stream-count="3"],
+  .streams-grid[data-stream-count="4"],
   .streams-grid[data-stream-count="5"],
-  .streams-grid[data-stream-count="6"] {
-    grid-template-columns: repeat(3, 1fr);
+  .streams-grid[data-stream-count="6"],
+  .streams-grid[data-stream-count="7"],
+  .streams-grid[data-stream-count="8"] {
+    grid-template-columns: repeat(4, 1fr); /* Updated column count */
+  }
+}
+
+@media (max-width: 1200px) {
+  .streams-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
