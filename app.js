@@ -168,9 +168,14 @@ function displaySchedule(scheduleData) {
       const allEvents = [];
       Object.entries(categories).forEach(([categoryName, events]) => {
         const cleanCategory = categoryName.replace('</span>', '');
-        const disallowedKeywords = [/*...*/];
+        const disallowedKeywords = [
+          'tennis', 'golf', 'snooker', 'biathlon', 'cross country', 'cycling',
+          'futsal', 'handball', 'horse racing', 'ski jumping', 'squash',
+          'volleyball', 'water polo', 'winter sports', 'athletics', 'aussie rules',
+          'darts', 'rugby league', 'rugby union', 'ice skating', 'alpine ski'
+        ];
 
-        if (!events || disallowedKeywords.some(k => cleanCategory.toLowerCase().includes(k.toLowerCase()))) {
+          if (!events || disallowedKeywords.some(k => cleanCategory.toLowerCase().includes(k.toLowerCase()))) {
           return;
         }
 
