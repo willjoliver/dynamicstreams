@@ -233,7 +233,6 @@ function displaySchedule(scheduleData) {
     container.textContent = "Error displaying schedule data";
   }
 }
-}
 
 function renderChannels(channels) {
   try {
