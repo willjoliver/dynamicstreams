@@ -73,7 +73,7 @@ document.addEventListener('keydown', (e) => {
   
   // Global shortcuts when the Command key (metaKey) is held (for Mac)
   if (e.metaKey) {
-    if (e.key >= '1' && e.key <= '8') {
+    if (e.key >= '1' && e.key <= '9') {
       document.getElementById(`streamInput${e.key}`).focus();
     } else if (e.key === 'Enter') {
       updateStreams();
@@ -254,7 +254,7 @@ function updateStreams() {
     streamsContainer.innerHTML = '';
     let streamCount = 0;
 
-    for (let i = 1; i <= 6; i++) {
+    for (let i = 1; i <= 9; i++) {
       const input = document.getElementById(`streamInput${i}`);
       const streamId = input.value.trim();
 
@@ -292,7 +292,7 @@ function updateStreams() {
 
 // Clear all stream inputs and iframes
 function clearStreams() {
-  for (let i = 1; i <= 8; i++) {
+  for (let i = 1; i <= 9; i++) {
     document.getElementById(`streamInput${i}`).value = '';
   }
   const streamsContainer = document.getElementById('streamsContainer');
