@@ -147,28 +147,28 @@ function displaySchedule(scheduleData) {
   try {
     // 1. Sort dates chronologically
     const sortedDates = Object.entries(scheduleData).sort((a, b) => {
-      const dateA = new Date(a[0].replace(' - Schedule Time UK GMT', ''));
-      const dateB = new Date(b[0].replace(' - Schedule Time UK GMT', ''));
+      const dateA = new Date(a[0].replace(' - Schedule Time UK GMT', '').replace(/(\d+)(st|nd|rd|th)/, '$1'));
+      const dateB = new Date(b[0].replace(' - Schedule Time UK GMT', '').replace(/(\d+)(st|nd|rd|th)/, '$1'));
       return dateA - dateB;
     });
 
     sortedDates.forEach(([dateString, categories]) => {
-      const cleanDate = dateString.replace(' - Schedule Time UK GMT', '');
+      const rawDate = dateString.replace(' - Schedule Time UK GMT', '');
+      // Properly clean date string (remove day name and ordinals)
+      const cleanDate = rawDate
+        .replace(/^\w+\s/, '') // Remove day name
+        .replace(/(\d+)(st|nd|rd|th)/, '$1'); // Remove ordinal suffix
+
       const dateHeader = document.createElement("h2");
       dateHeader.className = "schedule-date";
-      dateHeader.textContent = cleanDate;
+      dateHeader.textContent = rawDate; // Show original date string
       container.appendChild(dateHeader);
 
       // 2. Collect and sort ALL events across categories
       const allEvents = [];
       Object.entries(categories).forEach(([categoryName, events]) => {
         const cleanCategory = categoryName.replace('</span>', '');
-        const disallowedKeywords = [
-          'tennis', 'golf', 'snooker', 'biathlon', 'cross country', 'cycling',
-          'futsal', 'handball', 'horse racing', 'ski jumping', 'squash',
-          'volleyball', 'water polo', 'winter sports', 'athletics', 'aussie rules',
-          'darts', 'rugby league', 'rugby union', 'ice skating', 'alpine ski'
-        ];
+        const disallowedKeywords = [/*...*/];
 
         if (!events || disallowedKeywords.some(k => cleanCategory.toLowerCase().includes(k.toLowerCase()))) {
           return;
@@ -176,11 +176,16 @@ function displaySchedule(scheduleData) {
 
         events.forEach(event => {
           if (event.event && !disallowedKeywords.some(k => event.event.toLowerCase().includes(k.toLowerCase()))) {
-            const eventTime = new Date(`${cleanDate} ${event.time} GMT`);
+            // Create proper GMT date object
+            const [hours, minutes] = event.time.split(':');
+            const eventDate = new Date(cleanDate + ' ' + event.time + ' GMT');
+            eventDate.setUTCHours(hours);
+            eventDate.setUTCMinutes(minutes);
+
             allEvents.push({
               ...event,
               category: cleanCategory,
-              sortKey: eventTime.getTime()
+              sortKey: eventDate.getTime()
             });
           }
         });
