@@ -16,15 +16,30 @@ jobs:
 
       - name: Download schedule
         run: |
-          curl -o schedule.json https://daddylive.mp/schedule/schedule-generated.json
+          if ! curl -f -o schedule.json https://daddylive.mp/schedule/schedule-generated.json; then
+            echo "::error::Failed to download schedule file"
+            exit 1
+          fi
 
       - name: Commit and push changes
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
           git add schedule.json
-          git commit -m "Update schedule.json"
-          git push "https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          
+          if git diff --quiet --cached; then
+            echo "No changes to schedule.json"
+          else
+            git commit -m "Update schedule.json [skip ci]"
+            git push "https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          fi
+
+      - name: Archive schedule
+        uses: actions/upload-artifact@v3
+        with:
+          name: schedule-backup
+          path: schedule.json
+          retention-days: 3
 
       - name: Notify on failure
         if: failure()
