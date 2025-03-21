@@ -284,7 +284,6 @@ function updateStreams() {
 
     // Update grid layout based on stream count
     streamsContainer.setAttribute('data-stream-count', streamCount);
-    const isMobile = window.matchMedia("(max-width: 768px)").matches;
   } catch (e) {
     console.error("Error updating streams:", e);
   }
