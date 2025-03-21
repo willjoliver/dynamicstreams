@@ -180,7 +180,7 @@ function displaySchedule(scheduleData) {
             allEvents.push({
               ...event,
               category: cleanCategory,
-              sortKey: eventTime.getTime() // Use timestamp for accurate sorting
+              sortKey: eventTime.getTime()
             });
           }
         });
@@ -210,7 +210,16 @@ function displaySchedule(scheduleData) {
         categoryHeader.className = "category-header";
         categoryHeader.innerHTML = `<span>${categoryName}</span><span>▶</span>`;
         
-        eventsContainer.className = "category-events";
+        // Initialize events container as collapsed
+        eventsContainer.className = "category-events collapsed";
+
+        // Toggle functionality
+        categoryHeader.addEventListener("click", () => {
+          eventsContainer.classList.toggle("collapsed");
+          categoryHeader.querySelector("span:last-child").textContent = 
+            eventsContainer.classList.contains("collapsed") ? "▶" : "▼";
+        });
+
         events.forEach(event => {
           const eventDiv = document.createElement("div");
           eventDiv.className = "event";
