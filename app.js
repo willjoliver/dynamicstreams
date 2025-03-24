@@ -1,15 +1,12 @@
 function convertGMTToLocal(timeString, dateString) {
   try {
-    // Clean up date string
     const cleanDate = dateString
       .replace(' - Schedule Time UK GMT', '')
       .replace(/(\d+)(st|nd|rd|th)/, '$1');
 
-    // Parse as GMT date
     const gmtDateString = `${cleanDate} ${timeString} GMT`;
     const date = new Date(gmtDateString);
 
-    // Format with timezone
     return date.toLocaleTimeString('en-US', {
       hour: 'numeric',
       minute: '2-digit',
@@ -22,18 +19,15 @@ function convertGMTToLocal(timeString, dateString) {
   }
 }
 
-// Toggle schedule sidebar
 function toggleSidebar() {
   document.getElementById("sidebar").classList.toggle("open");
 }
 
-// Toggle channel sidebar
 function toggleChannelSidebar() {
   document.getElementById("channelSidebar").classList.toggle("open");
 }
 
 function fillEmptyStream(event) {
-  // Ensure the clicked element is a channel or channel-item
   const channelElement = event.target.closest('.channel, .channel-item');
   if (!channelElement) return;
 
@@ -42,14 +36,12 @@ function fillEmptyStream(event) {
 
   for (let input of inputs) {
     if (input.value.trim() === "") {
-      input.value = channelId; // Set the standard channel ID
-      input.focus(); // Focus the filled input
+      input.value = channelId;
+      input.focus();
       break;
     }
   }
 }
-
-// Initialize event listeners
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('toggleSchedule').addEventListener('click', toggleSidebar);
   document.getElementById('closeSidebar').addEventListener('click', toggleSidebar);
@@ -60,18 +52,15 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('scheduleContainer').addEventListener('click', fillEmptyStream);
   document.getElementById('channelList').addEventListener('click', fillEmptyStream);
 
-  // Keyboard shortcuts
 document.addEventListener('keydown', (e) => {
-  // If we're in an input field, trigger updateStreams on Enter.
   if (e.target.tagName.toLowerCase() === 'input') {
     if (e.key === 'Enter') {
       updateStreams();
       e.preventDefault();
-      return; // Prevent further processing
+      return;
     }
   }
-  
-  // Global shortcuts when the Command key (metaKey) is held (for Mac)
+
   if (e.metaKey) {
     if (e.key >= '1' && e.key <= '9') {
       document.getElementById(`streamInput${e.key}`).focus();
@@ -82,7 +71,6 @@ document.addEventListener('keydown', (e) => {
     }
   }
 });
-  // When the sort option changes, repopulate the channel list.
   const sortSelect = document.getElementById('sortOrder');
   if (sortSelect) {
     sortSelect.addEventListener('change', populateChannelList);
@@ -92,7 +80,6 @@ document.addEventListener('keydown', (e) => {
   loadSchedule();
 });
 
-// Load schedule data from GitHub
 async function loadSchedule() {
   try {
     const response = await fetch(
@@ -102,34 +89,26 @@ async function loadSchedule() {
     
     const scheduleData = await response.json();
     displaySchedule(scheduleData);
-  } catch (error) {
-    console.error("Error loading schedule:", error);
-    document.getElementById("scheduleContainer").textContent = "Failed to load schedule";
   }
 }
 
-// Populate the channel list sidebar with sorting options.
 function populateChannelList() {
   const container = document.getElementById('channelList');
-  container.innerHTML = ''; // Clear previous content
+  container.innerHTML = '';
   if (!channels) return;
 
-  // Get the sort order from the select element
   const sortSelect = document.getElementById('sortOrder');
-  let sortedChannels = channels.slice(); // Create a shallow copy
+  let sortedChannels = channels.slice();
 
   if (sortSelect) {
     const sortOrder = sortSelect.value;
     if (sortOrder === 'alpha') {
-      // Sort alphabetically by channel name.
       sortedChannels.sort((a, b) => a.name.localeCompare(b.name));
     } else if (sortOrder === 'numeric') {
-      // Sort numerically by channel id.
       sortedChannels.sort((a, b) => Number(a.id) - Number(b.id));
     }
   }
 
-  // Render channels
   sortedChannels.forEach(channel => {
     const div = document.createElement('div');
     div.className = 'channel-item';
@@ -139,13 +118,11 @@ function populateChannelList() {
   });
 }
 
-// Display the schedule data
 function displaySchedule(scheduleData) {
   const container = document.getElementById("scheduleContainer");
   container.innerHTML = "";
 
   try {
-    // 1. Sort dates chronologically
     const sortedDates = Object.entries(scheduleData).sort((a, b) => {
       const dateA = new Date(a[0].replace(' - Schedule Time UK GMT', '').replace(/(\d+)(st|nd|rd|th)/, '$1'));
       const dateB = new Date(b[0].replace(' - Schedule Time UK GMT', '').replace(/(\d+)(st|nd|rd|th)/, '$1'));
@@ -154,17 +131,15 @@ function displaySchedule(scheduleData) {
 
     sortedDates.forEach(([dateString, categories]) => {
       const rawDate = dateString.replace(' - Schedule Time UK GMT', '');
-      // Properly clean date string (remove day name and ordinals)
       const cleanDate = rawDate
-        .replace(/^\w+\s/, '') // Remove day name
-        .replace(/(\d+)(st|nd|rd|th)/, '$1'); // Remove ordinal suffix
+        .replace(/^\w+\s/, '')
+        .replace(/(\d+)(st|nd|rd|th)/, '$1');
 
       const dateHeader = document.createElement("h2");
       dateHeader.className = "schedule-date";
-      dateHeader.textContent = rawDate; // Show original date string
+      dateHeader.textContent = rawDate;
       container.appendChild(dateHeader);
 
-      // 2. Collect and sort ALL events across categories
       const allEvents = [];
       Object.entries(categories).forEach(([categoryName, events]) => {
         const cleanCategory = categoryName.replace('</span>', '');
@@ -181,7 +156,6 @@ function displaySchedule(scheduleData) {
 
         events.forEach(event => {
           if (event.event && !disallowedKeywords.some(k => event.event.toLowerCase().includes(k.toLowerCase()))) {
-            // Create proper GMT date object
             const [hours, minutes] = event.time.split(':');
             const eventDate = new Date(cleanDate + ' ' + event.time + ' GMT');
             eventDate.setUTCHours(hours);
@@ -196,22 +170,18 @@ function displaySchedule(scheduleData) {
         });
       });
 
-      // 3. Sort all events chronologically
       allEvents.sort((a, b) => a.sortKey - b.sortKey);
 
-      // 4. Group sorted events by category
       const eventsByCategory = allEvents.reduce((acc, event) => {
         acc[event.category] = acc[event.category] || [];
         acc[event.category].push(event);
         return acc;
       }, {});
 
-      // 5. Sort categories by their earliest event
       const sortedCategories = Object.entries(eventsByCategory).sort((a, b) => {
         return a[1][0].sortKey - b[1][0].sortKey;
       });
 
-      // 6. Render categories with sorted events
       sortedCategories.forEach(([categoryName, events]) => {
         const categoryContainer = document.createElement("div");
         const categoryHeader = document.createElement("div");
@@ -220,10 +190,8 @@ function displaySchedule(scheduleData) {
         categoryHeader.className = "category-header";
         categoryHeader.innerHTML = `<span>${categoryName}</span><span>▶</span>`;
         
-        // Initialize events container as collapsed
         eventsContainer.className = "category-events collapsed";
 
-        // Toggle functionality
         categoryHeader.addEventListener("click", () => {
           eventsContainer.classList.toggle("collapsed");
           categoryHeader.querySelector("span:last-child").textContent = 
@@ -247,9 +215,6 @@ function displaySchedule(scheduleData) {
         container.appendChild(categoryContainer);
       });
     });
-  } catch (e) {
-    console.error("Schedule display error:", e);
-    container.textContent = "Error displaying schedule data";
   }
 }
 
@@ -262,9 +227,6 @@ function renderChannels(channels) {
       </div>
     `).join('');
     return `<div class="channel-group">${mainChannels}</div>`;
-  } catch (e) {
-    console.error('Channel rendering error:', e);
-    return '';
   }
 }
 
@@ -291,8 +253,8 @@ function updateStreams() {
 
       if (streamId) {
         if (!isValidChannel(streamId)) {
-          input.value = ''; // Clear the blocked channel input
-          continue; // Skip to next iteration
+          input.value = '';
+          continue;
         }
         
         streamCount++;
@@ -300,7 +262,6 @@ function updateStreams() {
         const wrapper = document.createElement('div');
         wrapper.className = 'iframe-wrapper';
 
-        // Determine the stream URL
         let streamUrl;
         if (streamId.startsWith('https://')) {
           streamUrl = streamId;
@@ -313,14 +274,10 @@ function updateStreams() {
       }
     }
 
-    // Update grid layout based on stream count
     streamsContainer.setAttribute('data-stream-count', streamCount);
-  } catch (e) {
-    console.error("Error updating streams:", e);
-  }
+  } 
 }
 
-// Clear all stream inputs and iframes
 function clearStreams() {
   for (let i = 1; i <= 9; i++) {
     document.getElementById(`streamInput${i}`).value = '';

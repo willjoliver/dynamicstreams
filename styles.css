@@ -1,4 +1,3 @@
-/* Global resets and basic layout */
 * {
   margin: 0;
   padding: 0;
@@ -14,7 +13,6 @@ body, html {
   display: flex;
 }
 
-/* Top controls */
 .top-controls {
   display: flex;
   flex-wrap: wrap;
@@ -24,7 +22,6 @@ body, html {
   margin-bottom: 20px;
 }
 
-/* Sidebar for schedule */
 .sidebar {
   width: 300px;
   height: 100vh;
@@ -35,7 +32,7 @@ body, html {
   position: fixed;
   left: -300px;
   transition: left 0.3s;
-  z-index: 1000; /* Ensure sidebar is above other content */
+  z-index: 1000;
 }
 
 .sidebar.open {
@@ -62,7 +59,6 @@ body, html {
   padding: 5px;
 }
 
-/* Sidebar for channels */
 .channel-sidebar {
   width: 250px;
   height: 100vh;
@@ -73,7 +69,7 @@ body, html {
   position: fixed;
   right: -250px;
   transition: right 0.3s;
-  z-index: 1000; /* Ensure sidebar is above other content */
+  z-index: 1000;
 }
 
 .channel-sidebar.open {
@@ -105,7 +101,6 @@ body, html {
   background: #444;
 }
 
-/* Category & event styling */
 .category-header {
   cursor: pointer;
   padding: 10px;
@@ -128,16 +123,15 @@ body, html {
 }
 
 .category-events:not(.collapsed) {
-  max-height: 80vh; /* Limits height to 80% of viewport */
+  max-height: 80vh;
   overflow-y: auto;
-  padding-right: 5px; /* Space for scrollbar */
+  padding-right: 5px;
 }
 
 .category-events.collapsed {
   max-height: 0;
 }
 
-/* Custom scrollbar for category events */
 .category-events::-webkit-scrollbar {
   width: 8px;
 }
@@ -162,7 +156,6 @@ body, html {
   border-radius: 5px;
 }
 
-/* Channel group and channel styling */
 .channel-group {
   margin-top: 8px;
   display: flex;
@@ -193,9 +186,8 @@ body, html {
   outline: none;
   height: 40px;
   transition: background 0.2s, border-color 0.2s;
-  appearance: none; /* Removes default dropdown styling */
-  margin-bottom: 15px; /* Add margin below the dropdown */
-}
+  appearance: none;
+  margin-bottom: 15px;
 
 
 .sort-options select:hover {
@@ -208,7 +200,6 @@ body, html {
   border-color: #888;
 }
 
-/* Custom dropdown arrow */
 .sort-options {
   position: relative;
   display: inline-block;
@@ -225,10 +216,9 @@ body, html {
 }
 
 .sort-options select::-ms-expand {
-  display: none; /* Hides default dropdown arrow in IE/Edge */
+  display: none;
 }
 
-/* Button and input styling */
 button {
   padding: 10px 15px;
   font-size: 16px;
@@ -256,7 +246,6 @@ input {
   min-width: 150px;
 }
 
-/* Main content area */
 .main-content {
   margin: 0;
   width: 100%;
@@ -264,7 +253,6 @@ input {
   transition: margin 0.3s;
 }
 
-/* Adjust main content margins when sidebars are open */
 .sidebar.open ~ .main-content {
   margin-left: 300px;
 }
@@ -273,16 +261,15 @@ input {
   margin-right: 250px;
 }
 
-/* Streams grid layout */
 .streams-grid {
   display: grid;
   margin-top: 20px;
-  gap: 20px; /* Added gap between grid items */
+  gap: 20px;
 }
 
 @media (min-width: 769px) {
   .streams-grid {
-    grid-template-columns: repeat(3, 1fr); /* Default 3 columns */
+    grid-template-columns: repeat(3, 1fr);
   }
   
   .streams-grid[data-stream-count="1"] {
@@ -326,7 +313,6 @@ input {
   }
 }
 
-/* Schedule date header styling */
 .schedule-date {
   color: #fff;
   padding: 15px;
@@ -336,7 +322,6 @@ input {
   text-align: center;
 }
 
-/* Iframe wrapper styling */
 .iframe-wrapper {
   position: relative;
   width: 100%;
