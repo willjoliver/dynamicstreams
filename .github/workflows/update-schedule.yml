@@ -16,7 +16,7 @@ jobs:
 
       - name: Download schedule
         run: |
-          if ! curl -f -o schedule.json https://daddylive.mp/schedule/schedule-generated.json; then
+          if ! curl -f -o schedule.json https://daddylive.mp/schedule/schedule-generated.php; then
             echo "::error::Failed to download schedule file"
             exit 1
           fi
