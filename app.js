@@ -247,6 +247,9 @@ function renderChannels(channels) {
       </div>
     `).join('');
     return `<div class="channel-group">${mainChannels}</div>`;
+  } catch (error) {
+    console.error('Error rendering channels:', error);
+    return ''; // Return an empty string if an error occurs
   }
 }
 
@@ -311,7 +314,9 @@ function updateStreams() {
     }
 
     streamsContainer.setAttribute('data-stream-count', streamCount);
-  } 
+  }  catch (error) {
+    console.error('Error updating streams:', error);
+  }
 }
 
 function clearStreams() {
