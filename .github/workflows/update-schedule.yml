@@ -16,10 +16,23 @@ jobs:
 
       - name: Download schedule
         run: |
-          if ! curl -L -f -o schedule.json https://daddylive.mp/schedule/schedule-generated.php; then
+          # Add browser-like headers and use Tor for anonymity
+          if ! curl -L -f -o schedule.json \
+            -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36" \
+            -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" \
+            -H "Accept-Language: en-US,en;q=0.5" \
+            -H "Referer: https://daddylive.live/" \
+            --socks5-hostname localhost:9050 \
+            https://daddylive.mp/schedule/schedule-generated.php; then
             echo "::error::Failed to download schedule file"
             exit 1
           fi
+
+      - name: Install Tor
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y tor
+          sudo systemctl start tor
 
       - name: Commit and push changes
         run: |
@@ -30,8 +43,8 @@ jobs:
           if git diff --quiet --cached; then
             echo "No changes to schedule.json"
           else
-            git commit -m "Update schedule.json - $(date -u '+%Y-%m-%d %H:%M:%S') UTC [skip ci]"
-            git push "https://${{ github.actor }}:${{ github.token }}@github.com/${{ github.repository }}.git"
+            git commit -m "Update schedule.json [skip ci]"
+            git push "https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
           fi
 
       - name: Archive schedule
