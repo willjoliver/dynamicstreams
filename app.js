@@ -228,6 +228,9 @@ function displaySchedule(scheduleData) {
         container.appendChild(categoryContainer);
       });
     });
+  } catch (e) {
+    console.error("Error displaying schedule:", e);
+    container.innerHTML = "Error loading schedule.";
   }
 }
 
