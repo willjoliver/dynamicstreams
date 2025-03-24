@@ -87,7 +87,6 @@ document.addEventListener('keydown', (e) => {
     } else if (e.key === 'Backspace') {
       clearStreams();
     }
-  }
 });
 
 async function loadSchedule() {
