@@ -16,23 +16,29 @@ jobs:
 
       - name: Download schedule
         run: |
-          # Add browser-like headers and use Tor for anonymity
-          if ! curl -L -f -o schedule.json \
-            -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36" \
-            -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" \
-            -H "Accept-Language: en-US,en;q=0.5" \
-            -H "Referer: https://daddylive.live/" \
-            --socks5-hostname localhost:9050 \
-            https://daddylive.mp/schedule/schedule-generated.php; then
-            echo "::error::Failed to download schedule file"
+          # Try multiple proxy servers with retries
+          for proxy in "proxy-nl.zenrows.com:8001" "us.smartproxy.com:10000" "gate.smartproxy.com:7000"; do
+            if curl -L -f -o schedule.json \
+              -x "http://$proxy" \
+              -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36" \
+              -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" \
+              -H "Accept-Language: en-US,en;q=0.9" \
+              -H "Accept-Encoding: gzip, deflate, br" \
+              -H "DNT: 1" \
+              -H "Connection: keep-alive" \
+              -H "Referer: https://daddylive.live/" \
+              --retry 3 \
+              --retry-delay 5 \
+              https://daddylive.mp/schedule/schedule-generated.php; then
+              echo "Download successful using proxy $proxy"
+              break
+            fi
+          done
+
+          if [ ! -f schedule.json ]; then
+            echo "::error::All download attempts failed"
             exit 1
           fi
-
-      - name: Install Tor
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y tor
-          sudo systemctl start tor
 
       - name: Commit and push changes
         run: |
