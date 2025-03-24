@@ -222,7 +222,7 @@ function displaySchedule(scheduleData) {
           `;
           eventsContainer.appendChild(eventDiv);
         });
-        
+
         categoryContainer.appendChild(categoryHeader);
         categoryContainer.appendChild(eventsContainer);
         container.appendChild(categoryContainer);
@@ -241,18 +241,12 @@ function escapeHTML(str) {
 function renderChannels(channels) {
   try {
     const safeChannels = Array.isArray(channels) ? channels : [];
-    const validChannels = safeChannels.filter(channel => 
-      channels.some(c => c.id == (channel.channel_id || channel.id))
-    );
-
-    const mainChannels = validChannels.map(channel => {
+    
+    const mainChannels = safeChannels.map(channel => {
       const div = document.createElement('div');
       div.className = 'channel';
-      
-      // Use channel_id from schedule.json but match to channels.js IDs
-      div.dataset.channelId = channel.channel_id;
-      div.textContent = channel.channel_name;
-      
+      div.dataset.channelId = channel.channel_id;  // Use schedule's channel_id directly
+      div.textContent = channel.channel_name;     // Use schedule's channel_name directly
       return div.outerHTML;
     }).join('');
     
@@ -263,22 +257,6 @@ function renderChannels(channels) {
   }
 }
 
-function isValidChannel(channelId) {
-  // Allow string IDs from channels.js
-  if (typeof channelId === 'string') {
-    return channels.some(c => c.id === channelId);
-  }
-
-  const idNumber = parseInt(channelId, 10);
-  if (!isNaN(idNumber)) {
-    if (idNumber >= 501 && idNumber <= 520) {
-      alert('This channel is blocked due to content restrictions');
-      return false;
-    }
-    return channels.some(c => c.id == idNumber);
-  }
-  return false;
-}
 
 function isValidURL(url) {
   try {
@@ -302,11 +280,7 @@ function updateStreams() {
       const streamId = input.value.trim();
 
       if (streamId) {
-        if (!isValidChannel(streamId)) {
-          input.value = '';
-          continue;
-        }
-        
+
         streamCount++;
         const channel = channels.find(ch => ch.id == streamId);
         const wrapper = document.createElement('div');
