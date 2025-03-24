@@ -148,6 +148,8 @@ function displaySchedule(scheduleData) {
         .replace(/^\w+\s/, '')
         .replace(/(\d+)(st|nd|rd|th)/, '$1');
 
+      const baseDate = new Date(`${cleanDate} 00:00:00 GMT`);
+      
       const dateHeader = document.createElement("h2");
       dateHeader.className = "schedule-date";
       dateHeader.textContent = rawDate;
@@ -170,10 +172,14 @@ function displaySchedule(scheduleData) {
         events.forEach(event => {
           if (event.event && !disallowedKeywords.some(k => event.event.toLowerCase().includes(k.toLowerCase()))) {
             const [hours, minutes] = event.time.split(':');
-            const eventDate = new Date(cleanDate + ' ' + event.time + ' GMT');
+            const eventDate = new Date(baseDate);
             eventDate.setUTCHours(hours);
             eventDate.setUTCMinutes(minutes);
-
+            
+            if (hours < 6) {
+              eventDate.setUTCDate(eventDate.getUTCDate() + 1);
+            }
+            
             allEvents.push({
               ...event,
               category: cleanCategory,
