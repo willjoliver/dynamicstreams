@@ -49,6 +49,10 @@ function fillEmptyStream(event) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  const saved = JSON.parse(localStorage.getItem('streamInputs') || '[]');
+  saved.forEach((val, i) => {
+    document.getElementById(`streamInput${i+1}`).value = val;
+  });
   document.getElementById('toggleSchedule').addEventListener('click', toggleSidebar);
   document.getElementById('closeSidebar').addEventListener('click', toggleSidebar);
   document.getElementById('toggleChannels').addEventListener('click', toggleChannelSidebar);
@@ -57,6 +61,14 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('clearStreams').addEventListener('click', clearStreams);
   document.getElementById('scheduleContainer').addEventListener('click', fillEmptyStream);
   document.getElementById('channelList').addEventListener('click', fillEmptyStream);
+  const sortSelect = document.getElementById('sortOrder');
+  if (sortSelect) {
+    sortSelect.addEventListener('change', populateChannelList);
+  }
+
+  populateChannelList();
+  loadSchedule();
+});
 
 document.addEventListener('keydown', (e) => {
   if (e.target.tagName.toLowerCase() === 'input') {
@@ -67,11 +79,6 @@ document.addEventListener('keydown', (e) => {
     }
   }
 
-  const saved = JSON.parse(localStorage.getItem('streamInputs') || '[]');
-  saved.forEach((val, i) => {
-    document.getElementById(`streamInput${i+1}`).value = val;
-  });
-
   const isModKey = e.metaKey || e.ctrlKey; 
     if (e.key >= '1' && e.key <= '9') {
       document.getElementById(`streamInput${e.key}`).focus();
@@ -81,14 +88,6 @@ document.addEventListener('keydown', (e) => {
       clearStreams();
     }
   }
-});
-  const sortSelect = document.getElementById('sortOrder');
-  if (sortSelect) {
-    sortSelect.addEventListener('change', populateChannelList);
-  }
-
-  populateChannelList();
-  loadSchedule();
 });
 
 async function loadSchedule() {
@@ -238,7 +237,7 @@ function renderChannels(channels) {
     const safeChannels = Array.isArray(channels) ? channels : [];
     const mainChannels = safeChannels.map(channel => `
       <div class="channel" data-channel-id="${channel.channel_id}">
-        ${channel.channel_name}
+        ${escapeHTML(channel.channel_name)}
       </div>
     `).join('');
     return `<div class="channel-group">${mainChannels}</div>`;
