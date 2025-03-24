@@ -21,58 +21,6 @@ function convertGMTToLocal(timeString, dateString) {
     return timeString;
   }
 }
-// Add to app.js
-const AD_BLOCKLIST = [
-  'doubleclick.net',
-  'googleads.com',
-  'adservice.google.com',
-  'adsafeprotected.com',
-  'adnxs.com',
-  'advertising.com',
-  // Add more ad domains as needed
-];
-
-function createAdBlockedIframe(url) {
-  const wrapper = document.createElement('div');
-  wrapper.className = 'iframe-wrapper';
-  
-  // Create protective overlay
-  const overlay = document.createElement('div');
-  overlay.className = 'ad-block-overlay';
-  
-  // Create sandboxed iframe
-  const iframe = document.createElement('iframe');
-  iframe.sandbox = 'allow-scripts allow-same-origin allow-presentation allow-popups-to-escape-sandbox';
-  iframe.allow = 'fullscreen';
-  
-  // Block known ad domains
-  if (AD_BLOCKLIST.some(domain => url.includes(domain))) {
-    wrapper.innerHTML = '<div class="ad-blocked-message">Ad content blocked</div>';
-    return wrapper;
-  }
-
-  // Set up iframe with security features
-  iframe.src = url;
-  iframe.referrerPolicy = 'no-referrer';
-  iframe.loading = 'eager';
-  
-  // Add security-focused CSP
-  iframe.csp = "default-src 'none'; script-src 'self';";
-  
-  // Monitor for popups
-  iframe.addEventListener('load', () => {
-    try {
-      // Remove common ad elements (works only for same-origin iframes)
-      iframe.contentDocument.querySelectorAll('.ad, [class*="banner"], [id*="ad"]').forEach(el => el.remove());
-    } catch (error) {
-      // Cross-origin errors expected, use other methods below
-    }
-  });
-
-  wrapper.appendChild(iframe);
-  wrapper.appendChild(overlay);
-  return wrapper;
-}
 
 // Toggle schedule sidebar
 function toggleSidebar() {
@@ -361,7 +309,7 @@ function updateStreams() {
         }
 
         wrapper.innerHTML = `<iframe src="${streamUrl}" allowfullscreen></iframe>`;
-        streamsContainer.appendChild(createAdBlockedIframe(streamUrl));
+        streamsContainer.appendChild(wrapper);
       }
     }
 
