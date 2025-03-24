@@ -80,13 +80,15 @@ document.addEventListener('keydown', (e) => {
   }
 
   const isModKey = e.metaKey || e.ctrlKey; 
-    if (e.key >= '1' && e.key <= '9') {
+  if (isModKey) {
+      if (e.key >= '1' && e.key <= '9') {
       document.getElementById(`streamInput${e.key}`).focus();
     } else if (e.key === 'Enter') {
       updateStreams();
     } else if (e.key === 'Backspace') {
       clearStreams();
     }
+  }  
 });
 
 async function loadSchedule() {
@@ -95,9 +97,11 @@ async function loadSchedule() {
       'https://raw.githubusercontent.com/willjoliver/dynamicstreams/refs/heads/main/schedule.json'
     );
     if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-    
     const scheduleData = await response.json();
     displaySchedule(scheduleData);
+  } catch (e) {
+    console.error('Schedule load failed:', e);
+    document.getElementById('scheduleContainer').innerHTML = 'Schedule unavailable';
   }
 }
 
@@ -133,8 +137,8 @@ function displaySchedule(scheduleData) {
 
   try {
     const sortedDates = Object.entries(scheduleData).sort((a, b) => {
-      const dateA = new Date(a[0].replace(' - Schedule Time UK GMT', '').replace(/(\d+)(st|nd|rd|th)/, '$1'));
-      const dateB = new Date(b[0].replace(' - Schedule Time UK GMT', '').replace(/(\d+)(st|nd|rd|th)/, '$1'));
+      const dateA = new Date(cleanDateString(a[0]) + ' GMT');
+      const dateB = new Date(cleanDateString(b[0]) + ' GMT');
       return dateA - dateB;
     });
 
@@ -254,6 +258,15 @@ function isValidChannel(channelId) {
   return true;
 }
 
+function isValidURL(url) {
+  try {
+    new URL(url);
+    return url.startsWith('https://');
+  } catch {
+    return false;
+  }
+}
+
 function updateStreams() {
   const inputs = [...document.querySelectorAll('input')].map(i => i.value);
   localStorage.setItem('streamInputs', JSON.stringify(inputs));
@@ -279,6 +292,11 @@ function updateStreams() {
 
         let streamUrl;
         if (streamId.startsWith('https://')) {
+          if (!isValidURL(streamId)) {
+            alert('Invalid stream URL');
+            input.value = '';
+            continue;
+          }
           streamUrl = streamId;
         } else {
           streamUrl = channel?.customUrl || `https://daddylive.mp/embed/stream-${streamId}.php`;
