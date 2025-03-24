@@ -188,6 +188,7 @@ body, html {
   transition: background 0.2s, border-color 0.2s;
   appearance: none;
   margin-bottom: 15px;
+}
 
 
 .sort-options select:hover {

@@ -152,7 +152,6 @@ const channels = [
     {id: 776, name: "Chicago Sports Network (CHSN)"},
     {id: 777, name: "NBC Sports Philadelphia"},
     {id: 778, name: "Monumental Sports Network"},
-    {id: 759, name: "SportsNet New York (SNY)"},
     {id: 799, name: "Premier Sports 2 UK"},
     {id: 820, name: "FOX Sports 502 AU"},
     {id: 821, name: "FOX Sports 503 AU"},

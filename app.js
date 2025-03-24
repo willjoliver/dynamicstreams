@@ -18,6 +18,11 @@ function convertGMTToLocal(timeString, dateString) {
     return timeString;
   }
 }
+function cleanDateString(dateStr) {
+  return dateStr
+    .replace(' - Schedule Time UK GMT', '')
+    .replace(/(\d+)(st|nd|rd|th)/, '$1');
+}
 
 function toggleSidebar() {
   document.getElementById("sidebar").classList.toggle("open");
@@ -42,6 +47,7 @@ function fillEmptyStream(event) {
     }
   }
 }
+
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('toggleSchedule').addEventListener('click', toggleSidebar);
   document.getElementById('closeSidebar').addEventListener('click', toggleSidebar);
@@ -61,7 +67,12 @@ document.addEventListener('keydown', (e) => {
     }
   }
 
-  if (e.metaKey) {
+  const saved = JSON.parse(localStorage.getItem('streamInputs') || '[]');
+  saved.forEach((val, i) => {
+    document.getElementById(`streamInput${i+1}`).value = val;
+  });
+
+  const isModKey = e.metaKey || e.ctrlKey; 
     if (e.key >= '1' && e.key <= '9') {
       document.getElementById(`streamInput${e.key}`).focus();
     } else if (e.key === 'Enter') {
@@ -204,9 +215,9 @@ function displaySchedule(scheduleData) {
           const localTime = convertGMTToLocal(event.time, dateString);
           
           eventDiv.innerHTML = `
-            <h3>${localTime} - ${event.event}</h3>
-            ${renderChannels(event.channels || [])}
-          `;
+              <h3>${escapeHTML(localTime)} - ${escapeHTML(event.event)}</h3>
+              ${renderChannels(event.channels || [])}
+            `;
           eventsContainer.appendChild(eventDiv);
         });
 
@@ -216,6 +227,10 @@ function displaySchedule(scheduleData) {
       });
     });
   }
+}
+
+function escapeHTML(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 function renderChannels(channels) {
@@ -242,6 +257,8 @@ function isValidChannel(channelId) {
 }
 
 function updateStreams() {
+  const inputs = [...document.querySelectorAll('input')].map(i => i.value);
+  localStorage.setItem('streamInputs', JSON.stringify(inputs));
   try {
     const streamsContainer = document.getElementById('streamsContainer');
     streamsContainer.innerHTML = '';
