@@ -162,7 +162,8 @@ function displaySchedule(scheduleData) {
           'tennis', 'golf', 'snooker', 'biathlon', 'cross country', 'cycling',
           'futsal', 'handball', 'horse racing', 'ski jumping', 'squash',
           'volleyball', 'water polo', 'winter sports', 'athletics', 'aussie rules',
-          'darts', 'rugby league', 'rugby union', 'ice skating', 'alpine ski'
+          'darts', 'rugby league', 'rugby union', 'ice skating', 'alpine ski',
+          'sailing', 'boating', 'lacrosse', 'ice hockey' // Added new categories
         ];
 
           if (!events || disallowedKeywords.some(k => cleanCategory.toLowerCase().includes(k.toLowerCase()))) {
