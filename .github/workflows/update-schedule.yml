@@ -12,11 +12,11 @@ jobs:
       issues: write
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4  # Updated from v3
+        uses: actions/checkout@v4
 
       - name: Download schedule
         run: |
-          if ! curl -f -o schedule.json https://daddylive.mp/schedule/schedule-generated.php; then
+          if ! curl -L -f -o schedule.json https://daddylive.mp/schedule/schedule-generated.php; then
             echo "::error::Failed to download schedule file"
             exit 1
           fi
@@ -30,12 +30,12 @@ jobs:
           if git diff --quiet --cached; then
             echo "No changes to schedule.json"
           else
-            git commit -m "Update schedule.json [skip ci]"
-            git push "https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+            git commit -m "Update schedule.json - $(date -u '+%Y-%m-%d %H:%M:%S') UTC [skip ci]"
+            git push "https://${{ github.actor }}:${{ github.token }}@github.com/${{ github.repository }}.git"
           fi
 
       - name: Archive schedule
-        uses: actions/upload-artifact@v4  # Changed from v3 to v4
+        uses: actions/upload-artifact@v4
         with:
           name: schedule-backup
           path: schedule.json
@@ -43,7 +43,7 @@ jobs:
 
       - name: Notify on failure
         if: failure()
-        uses: actions/github-script@v7  # Updated from v6
+        uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |

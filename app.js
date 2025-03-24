@@ -217,12 +217,12 @@ function displaySchedule(scheduleData) {
           const localTime = convertGMTToLocal(event.time, dateString);
           
           eventDiv.innerHTML = `
-              <h3>${escapeHTML(localTime)} - ${escapeHTML(event.event)}</h3>
-              ${renderChannels(event.channels || [])}
-            `;
+            <h3>${escapeHTML(localTime)} - ${escapeHTML(event.event)}</h3>
+            ${renderChannels(event.channels || [])}
+          `;
           eventsContainer.appendChild(eventDiv);
         });
-
+        
         categoryContainer.appendChild(categoryHeader);
         categoryContainer.appendChild(eventsContainer);
         container.appendChild(categoryContainer);
@@ -241,27 +241,43 @@ function escapeHTML(str) {
 function renderChannels(channels) {
   try {
     const safeChannels = Array.isArray(channels) ? channels : [];
-    const mainChannels = safeChannels.map(channel => `
-      <div class="channel" data-channel-id="${channel.channel_id}">
-        ${escapeHTML(channel.channel_name)}
-      </div>
-    `).join('');
+    const validChannels = safeChannels.filter(channel => 
+      channels.some(c => c.id == (channel.channel_id || channel.id))
+    );
+
+    const mainChannels = validChannels.map(channel => {
+      const div = document.createElement('div');
+      div.className = 'channel';
+      
+      // Use channel_id from schedule.json but match to channels.js IDs
+      div.dataset.channelId = channel.channel_id;
+      div.textContent = channel.channel_name;
+      
+      return div.outerHTML;
+    }).join('');
+    
     return `<div class="channel-group">${mainChannels}</div>`;
   } catch (error) {
     console.error('Error rendering channels:', error);
-    return ''; // Return an empty string if an error occurs
+    return '';
   }
 }
 
 function isValidChannel(channelId) {
+  // Allow string IDs from channels.js
+  if (typeof channelId === 'string') {
+    return channels.some(c => c.id === channelId);
+  }
+
   const idNumber = parseInt(channelId, 10);
   if (!isNaN(idNumber)) {
     if (idNumber >= 501 && idNumber <= 520) {
       alert('This channel is blocked due to content restrictions');
       return false;
     }
+    return channels.some(c => c.id == idNumber);
   }
-  return true;
+  return false;
 }
 
 function isValidURL(url) {
