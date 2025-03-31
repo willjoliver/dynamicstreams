@@ -198,5 +198,7 @@ const channels = [
     {id: 'star1alt', name: 'Star Sports 1 English Alt', customUrl: 'https://stream.crichd.sc/update/star.php'},
     {id: 'star1h', name: 'Star Sports 1 Hindi', customUrl: 'https://stream.crichd.sc/update/star1hi.php'},
     {id: 'star2', name: 'Star Sports 2 English', customUrl: 'https://cdn.crichdplays.ru/embed2.php?id=starsp2'},
-    {id: 'star3', name: 'Star Sports 2 Hindi', customUrl: 'https://cdn.crichdplays.ru/embed2.php?id=starsp3'},
+    {id: 'star2h', name: 'Star Sports 2 Hindi', customUrl: 'https://cdn.crichdplays.ru/embed2.php?id=starsp3'},
+    {id: 'ptv', name: 'PTV Sports Alt', customUrl: 'https://stream.crichd.sc/update/ptv.php'},
+    {id: 'asport', name: 'A Sports Alt', customUrl: 'https://stream.crichd.sc/update/asportshd.php'},
 ];
