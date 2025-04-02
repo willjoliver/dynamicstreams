@@ -1,0 +1,29 @@
+name: Update Schedule
+
+on:
+  schedule:
+    - cron: '0 11 * * *'  # Runs daily at 11:00 AM UTC
+  workflow_dispatch:    # Allows manual triggering
+
+jobs:
+  update-file:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Download schedule file
+        run: |
+          curl -s -o schedule-generated.php https://daddylive.mp/schedule/schedule-generated.php
+
+      - name: Commit changes
+        run: |
+          git config --local user.email "your-email@example.com"
+          git config --local user.name "Your Name"
+          git add schedule-generated.php
+          git commit -m "Daily update of schedule file" || echo "No changes to commit"
+          
+      - name: Push changes
+        uses: ad-m/github-push-action@v0.6.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
