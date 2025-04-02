@@ -2,15 +2,23 @@ name: Update Schedule
 
 on:
   schedule:
-    - cron: '0 11 * * *'  # Runs daily at 11:00 AM UTC
-  workflow_dispatch:    # Allows manual triggering
+    - cron: '0 11 * * *'  # Runs daily at 2:00 AM UTC
+  workflow_dispatch:      # Allows manual triggering
 
 jobs:
   update-file:
     runs-on: ubuntu-latest
+    # Grant write permissions to the token
+    permissions:
+      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          # Persist credentials (default is true, but explicit for clarity)
+          persist-credentials: true
+          # Fetch all history to avoid shallow clone issues
+          fetch-depth: 0
 
       - name: Download schedule file
         run: |
@@ -18,12 +26,13 @@ jobs:
 
       - name: Commit changes
         run: |
-          git config --local user.email "your-email@example.com"
-          git config --local user.name "Your Name"
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
           git add schedule-generated.php
           git commit -m "Daily update of schedule file" || echo "No changes to commit"
-          
+
       - name: Push changes
         uses: ad-m/github-push-action@v0.6.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: master
