@@ -201,4 +201,5 @@ const channels = [
     {id: 'star2h', name: 'Star Sports 2 Hindi', customUrl: 'https://cdn.crichdplays.ru/embed2.php?id=starsp3'},
     {id: 'ptv', name: 'PTV Sports Alt', customUrl: 'https://stream.crichd.sc/update/ptv.php'},
     {id: 'asport', name: 'A Sports Alt', customUrl: 'https://stream.crichd.sc/update/asportshd.php'},
+    {id: 'wral', name: 'WRAL News+', customUrl: 'https://www.youtube.com/embed/5zOTU7rpikw?si=B5sPjG-wm3gvlF0-'},
 ];
