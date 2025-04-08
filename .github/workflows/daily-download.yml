@@ -3,7 +3,7 @@ name: Daily Download of Schedule File
 on:
   schedule:
     - cron: "0 0 * * *"  # Runs daily at midnight UTC
-  workflow_dispatch:  # Optional: allows manual triggering
+  workflow_dispatch:  # Optional for manual triggering
 
 jobs:
   download:
@@ -13,7 +13,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT_TOKEN }}
 
       - name: Download schedule file
         run: |
