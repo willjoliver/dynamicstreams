@@ -13,24 +13,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT_TOKEN }}
 
       - name: Download schedule file
         run: |
-          # Use curl to download the file; you could also use wget if preferred.
           curl -o schedule.js "https://daddylive.mp/schedule/schedule-generated.php"
 
       - name: Configure Git for push
         run: |
-          # Set up authentication for Git push using the GITHUB_TOKEN
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          # Update the remote URL to include the token for authentication
-          git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          git remote set-url origin "https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/${{ github.repository }}.git"
 
       - name: Commit changes if file updated
         run: |
-          # Check if schedule.js has changed
           if [ -n "$(git status --porcelain schedule.js)" ]; then
             git add schedule.js
             git commit -m "Update schedule file [skip ci]"
