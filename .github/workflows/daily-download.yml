@@ -2,7 +2,7 @@ name: Daily Download of Schedule File
 
 on:
   schedule:
-    - cron: "0 0 * * *"  # Runs daily at midnight UTC
+    - cron: "0 11 * * *"
   workflow_dispatch:  # Optional for manual triggering
 
 jobs:
@@ -13,24 +13,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # Persist credentials (default is true, but explicit for clarity)
+          persist-credentials: true
+          # Fetch all history to avoid shallow clone issues
+          fetch-depth: 0
 
       - name: Download schedule file
         run: |
           curl -o schedule.js "https://daddylive.mp/schedule/schedule-generated.php"
 
-      - name: Configure Git for push
+      - name: Commit changes
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git remote set-url origin "https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/${{ github.repository }}.git"
-
-      - name: Commit changes if file updated
-        run: |
-          if [ -n "$(git status --porcelain schedule.js)" ]; then
-            git add schedule.js
-            git commit -m "Update schedule file [skip ci]"
-            git push
-          else
-            echo "No changes in schedule.js"
-          fi
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add schedule.js
+          git commit -m "Daily update of schedule file" || echo "No changes to commit"
+      - name: Push changes
+        uses: ad-m/github-push-action@v0.6.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: master
