@@ -1,0 +1,34 @@
+name: Daily Download of Schedule File
+
+on:
+  schedule:
+    - cron: "0 11 * * *"
+  workflow_dispatch:  # Optional: allows manual triggering
+
+jobs:
+  download:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Download schedule file
+        run: |
+          # Use curl to download the file; you could use wget as well.
+          curl -o schedule.js "https://daddylive.mp/schedule/schedule-generated.php"
+      
+      - name: Commit changes if file updated
+        run: |
+          # Configure git
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Check if schedule.js has changed
+          if [ -n "$(git status --porcelain schedule.js)" ]; then
+            git add schedule.js
+            git commit -m "Update schedule file [skip ci]"  # [skip ci] avoids triggering any CI build again
+            git push
+          else
+            echo "No changes in schedule.js"
+          fi
