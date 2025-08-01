@@ -302,7 +302,7 @@ function updateStreams() {
           }
           streamUrl = streamId;
         } else {
-          streamUrl = channel?.customUrl || `https://daddylive.dad/embed/stream-${streamId}.php`;
+          streamUrl = channel?.customUrl || `https://dlhd.click/embed/stream-${streamId}.php`;
         }
 
         wrapper.innerHTML = `<iframe src="${streamUrl}" allowfullscreen></iframe>`;
