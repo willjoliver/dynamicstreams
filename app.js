@@ -302,7 +302,7 @@ function updateStreams() {
           }
           streamUrl = streamId;
         } else {
-          streamUrl = channel?.customUrl || `https://thedaddy.dad/embed/stream-${streamId}.php`;
+          streamUrl = channel?.customUrl || `https://thedaddy.top/embed/stream-${streamId}.php`;
         }
 
         wrapper.innerHTML = `<iframe src="${streamUrl}" allowfullscreen></iframe>`;
