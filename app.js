@@ -86,6 +86,26 @@ document.addEventListener('DOMContentLoaded', () => {
   loadSchedule();
 });
 
+function toggleTopControls() {
+  const top = document.querySelector('.top-controls');
+  if (!top) return;
+  top.classList.toggle('hidden');
+  document.body.classList.toggle('top-hidden');
+}
+
+// add button handler and a keyboard shortcut 'h'
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('hideTopControls');
+  if (btn) btn.addEventListener('click', toggleTopControls);
+
+  // keyboard shortcut: press 'h' to toggle, but only when not typing in an input
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'h' && e.target.tagName.toLowerCase() !== 'input' && e.target.tagName.toLowerCase() !== 'textarea') {
+      toggleTopControls();
+    }
+  });
+});
+
 document.addEventListener('keydown', (e) => {
   if (e.target.tagName.toLowerCase() === 'input') {
     if (e.key === 'Enter') {
