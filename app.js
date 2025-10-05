@@ -1,3 +1,19 @@
+function setGridColumnsByCount(count) {
+  const container = document.getElementById('streamsContainer');
+  if (!container) return;
+
+  // Simple mapping: 1 -> 1 col, 2-4 -> 2 cols, 5+ -> 3 cols
+  let cols = 3;
+  if (count <= 1) cols = 1;
+  else if (count <= 4) cols = 2;
+  else cols = 3;
+
+  // Alternatively compute roughly square layout:
+  // cols = Math.ceil(Math.sqrt(count));
+
+  container.style.setProperty('--columns', cols);
+}
+
 function convertGMTToLocal(timeString, dateString) {
   try {
     const cleanDate = dateString
@@ -311,6 +327,7 @@ function updateStreams() {
     }
 
     streamsContainer.setAttribute('data-stream-count', streamCount);
+    setGridColumnsByCount(streamCount);
   }  catch (error) {
     console.error('Error updating streams:', error);
   }
